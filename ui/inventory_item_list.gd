@@ -1,0 +1,2 @@
+extends ItemList
+class_name InventoryItemList

@@ -1,0 +1,19 @@
+[gd_scene load_steps=5 format=3 uid="uid://r4d2q3dgspjh"]
+
+[ext_resource type="PackedScene" uid="uid://tj70bh8ji47w" path="res://FirstTown.tscn" id="1_3g8n2"]
+[ext_resource type="PackedScene" uid="uid://d2j78l8viivgs" path="res://Player.tscn" id="2_cu2lx"]
+[ext_resource type="PackedScene" uid="uid://dhmd2d2keny5" path="res://Enemy.tscn" id="3_278ys"]
+[ext_resource type="PackedScene" uid="uid://dglqw5flk22gi" path="res://ui/ingame_ui.tscn" id="4_nd36h"]
+
+[node name="FantasyGameState" type="Node2D"]
+
+[node name="World" parent="." instance=ExtResource("1_3g8n2")]
+
+[node name="Player" parent="." instance=ExtResource("2_cu2lx")]
+
+[node name="Enemy" parent="." instance=ExtResource("3_278ys")]
+position = Vector2(778, 512)
+
+[node name="PlayerUiRoot" parent="." instance=ExtResource("4_nd36h")]
+visible = false
+z_index = 1000
