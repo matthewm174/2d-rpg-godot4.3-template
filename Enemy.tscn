@@ -328,6 +328,7 @@ animations = [{
 
 [node name="CharacterBody2D" type="CharacterBody2D" parent="."]
 script = ExtResource("1_kyo74")
+patrol_points = Array[Vector2]([Vector2(99, 100), Vector2(0, 0)])
 
 [node name="rigidBodyColl" type="CollisionShape2D" parent="CharacterBody2D"]
 position = Vector2(0.5, 6)

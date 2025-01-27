@@ -31,20 +31,32 @@ func hide_main_menu():
 func _ready() -> void:
 	player_ui_root.visible = true
 	create_spell_panels()
+	#Globals.current_player.load
 
 func create_spell_panels():
-	for i in range(Globals.current_player.equipped_spells):
+	for i in range(Globals.current_player.max_equippable_spells):
 		var style = StyleBoxFlat.new()
 		style.bg_color = Color(0.1, 0.1, 0.1)
 		var panel = Panel.new()
+		panel.name = "spell_%d" % [i]
 		panel.add_theme_stylebox_override("panel", style)
-		panel.set_custom_minimum_size(Vector2(40, 40))
+		panel.set_custom_minimum_size(Vector2(64, 64))
 		spell_grid_container.add_child(panel)
+		
+
+func hide_hud():
+	spell_grid_container.visible = false
+
+func show_hud():
+	spell_grid_container.visible = true
+
 
 func show_inventory():
+	hide_hud()
 	player_ui.visible = true
 
 func hide_inventory():
+	show_hud()
 	player_ui.visible = false
 
 func _on_inventory_item_list_item_selected(index: int) -> void:

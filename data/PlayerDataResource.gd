@@ -15,10 +15,13 @@ var fighting
 var cooking
 var wizardry
 var running
-var inventory: Inventory
+var inventory: Inventory = Inventory.new()
 var equipment: Equipment
 var spells: Array[Spell]
 var data
+var equipped_spells: Dictionary = {}
+
+var testing = true
 
 func _init():
 	var data = load("res://player_data.tres") as PlayerDataResource
@@ -45,6 +48,14 @@ func get_player_data():
 		Globals.player_data.wisdom = 5
 		Globals.player_data.strength = 5
 		Globals.player_data.speed = 5
+		Globals.player_data.equipped_spells = { 0: null, 1: null, 2: null, 3: null }
+		if testing:
+			Globals.player_data.equipped_spells[0] = Globals.item_resources.master_spell_book["fire_ball"]
+			Globals.player_data.inventory.inv_slots.append(Globals.item_resources.master_spell_book["fire_ball"])
+			Globals.player_data.inventory.inv_slots.append(Globals.item_resources.master_weapon_book["short_sword"])
+			#Globals.player_data.equipped_spells[1] = Globals.item_resources.master_spell_book["fire_ball"]
+			#Globals.player_data.equipped_spells[2] = Globals.item_resources.master_spell_book["fire_ball"]
+			#Globals.player_data.equipped_spells[3] = Globals.item_resources.master_spell_book["fire_ball"]
 		#Globals.player_data.equipment["Head"] = Wearable_Item.new()
 		#Globals.player_data.equipment["Arms"] = Wearable_Item.new()
 		#Globals.player_data.equipment["Legs"] = Wearable_Item.new()

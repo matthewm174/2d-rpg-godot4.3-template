@@ -7,13 +7,13 @@
 
 [node name="FantasyGameState" type="Node2D"]
 
+[node name="PlayerUiRoot" parent="." instance=ExtResource("4_nd36h")]
+visible = false
+z_index = 1000
+
 [node name="World" parent="." instance=ExtResource("1_3g8n2")]
 
 [node name="Player" parent="." instance=ExtResource("2_cu2lx")]
 
 [node name="Enemy" parent="." instance=ExtResource("3_278ys")]
 position = Vector2(778, 512)
-
-[node name="PlayerUiRoot" parent="." instance=ExtResource("4_nd36h")]
-visible = false
-z_index = 1000
