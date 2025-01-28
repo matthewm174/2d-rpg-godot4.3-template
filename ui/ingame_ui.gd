@@ -30,6 +30,7 @@ func hide_main_menu():
 
 func _ready() -> void:
 	player_ui_root.visible = true
+	player_ui.visible =false
 	create_spell_panels()
 	#Globals.current_player.load
 
@@ -81,4 +82,3 @@ func _on_main_menu_item_list_item_selected(index: int) -> void:
 		MENU_OPTIONS.QUIT:
 			get_tree().quit()
 			
-	pass # Replace with function body.

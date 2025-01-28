@@ -92,21 +92,21 @@ offset_top = 122.0
 offset_right = 264.0
 offset_bottom = 192.0
 
-[node name="HeadPanel" type="Panel" parent="PlayerUi/ItemsHSplitContainer/DescEquipVSplitContainer/ImageEquipHSplitContainer/SpellPanel"]
+[node name="spell_1" type="Panel" parent="PlayerUi/ItemsHSplitContainer/DescEquipVSplitContainer/ImageEquipHSplitContainer/SpellPanel"]
 layout_mode = 0
 offset_left = 20.0
 offset_top = 123.0
 offset_right = 89.0
 offset_bottom = 193.0
 
-[node name="LegsPanel" type="Panel" parent="PlayerUi/ItemsHSplitContainer/DescEquipVSplitContainer/ImageEquipHSplitContainer/SpellPanel"]
+[node name="spell_2" type="Panel" parent="PlayerUi/ItemsHSplitContainer/DescEquipVSplitContainer/ImageEquipHSplitContainer/SpellPanel"]
 layout_mode = 0
 offset_left = 111.0
 offset_top = 19.0
 offset_right = 180.0
 offset_bottom = 89.0
 
-[node name="PrimaryPanel" type="Panel" parent="PlayerUi/ItemsHSplitContainer/DescEquipVSplitContainer/ImageEquipHSplitContainer/SpellPanel"]
+[node name="spell_3" type="Panel" parent="PlayerUi/ItemsHSplitContainer/DescEquipVSplitContainer/ImageEquipHSplitContainer/SpellPanel"]
 layout_mode = 0
 offset_left = 111.0
 offset_top = 210.0
@@ -145,5 +145,6 @@ offset_right = 942.0
 offset_bottom = 545.0
 columns = 2
 
+[connection signal="item_clicked" from="PlayerUi/ItemsHSplitContainer/InventoryItemList" to="." method="_on_inventory_item_list_item_clicked"]
 [connection signal="item_selected" from="PlayerUi/ItemsHSplitContainer/InventoryItemList" to="." method="_on_inventory_item_list_item_selected"]
 [connection signal="item_selected" from="MainMenuItemList" to="." method="_on_main_menu_item_list_item_selected"]

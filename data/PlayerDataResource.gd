@@ -16,7 +16,7 @@ var cooking
 var wizardry
 var running
 var inventory: Inventory = Inventory.new()
-var equipment: Equipment
+var equipment: Equipment = Equipment.new()
 var spells: Array[Spell]
 var data
 var equipped_spells: Dictionary = {}
@@ -53,13 +53,9 @@ func get_player_data():
 			Globals.player_data.equipped_spells[0] = Globals.item_resources.master_spell_book["fire_ball"]
 			Globals.player_data.inventory.inv_slots.append(Globals.item_resources.master_spell_book["fire_ball"])
 			Globals.player_data.inventory.inv_slots.append(Globals.item_resources.master_weapon_book["short_sword"])
-			#Globals.player_data.equipped_spells[1] = Globals.item_resources.master_spell_book["fire_ball"]
-			#Globals.player_data.equipped_spells[2] = Globals.item_resources.master_spell_book["fire_ball"]
-			#Globals.player_data.equipped_spells[3] = Globals.item_resources.master_spell_book["fire_ball"]
-		#Globals.player_data.equipment["Head"] = Wearable_Item.new()
-		#Globals.player_data.equipment["Arms"] = Wearable_Item.new()
-		#Globals.player_data.equipment["Legs"] = Wearable_Item.new()
-		#Globals.player_data.equipment["Feet"] = Wearable_Item.new()	
+			Globals.player_data.equipment.equipment_slots[Globals.WEARABLE_LOCATIONS.Primary_Hand] = Globals.item_resources.master_weapon_book["short_sword"]
+		
+
 	else:
 		print("LOAD SAVE CALLED.")
 		Globals.player_data = data
