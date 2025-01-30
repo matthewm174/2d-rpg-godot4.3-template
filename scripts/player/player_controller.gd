@@ -17,9 +17,10 @@ var available_spells = {}
 var equipped_spells = {}
 var showing_menu = false;
 var max_equippable_spells = 4;
-
+var spell_equip_index = 0
 func _init():
 	Globals.current_player = self
+	
 	
 
 func _ready():
@@ -29,13 +30,18 @@ func _ready():
 		is_animating_spell = false;
 		is_animating_attack = false;
 	)
+	#spell_equip_index = Globals.player_data.equipped_spells.size()
 	
 	
 func load_player_data():
 	Globals.player_data.get_player_data()
+	for spell_key in Globals.item_resources.master_spell_book:
+		var spell = Globals.item_resources.master_spell_book[spell_key]
+		# Check if the spell is unlocked
+		if spell.is_unlocked:
+			available_spells[spell_key] = spell
 	if Globals.player_data:
 		load_spells()
-		load_equip()
 		load_inventory()
 
 
@@ -44,10 +50,11 @@ func load_inventory():
 	player_inventory = Globals.player_data.inventory
 	
 	for slot in player_inventory.inv_slots:
-		Globals.in_game_ui.inventory_item_list.add_item(slot.item_name)
+		var index = Globals.in_game_ui.inventory_item_list.add_item(slot.item_name)
+		Globals.in_game_ui.inventory_item_list.set_item_metadata(index, slot) 
 	
 	
-func load_equip():
+func load_spells():
 	
 	for i in range(max_equippable_spells):
 		var spell_panels = Globals.in_game_ui.spell_grid_container.get_children() #spells panels
@@ -66,17 +73,50 @@ func load_equip():
 			texture_rect.texture = Globals.item_resources.master_spell_book["fire_ball"].item_graphic.texture  # Set the texture
 			texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED  # Adjust the stretch mode
 			spell_panels[i].add_child(texture_rect)
+			spell_equip_index+=1
 
+func equip_inv_item(item_metadata: Wearable_Item):
+	add_item_to_equipment_panel(item_metadata)
+
+func append_to_spells(value):
+	Globals.player_data.equipped_spells[spell_equip_index] = value
+	spell_equip_index = (spell_equip_index + 1) % 4  # Reset to 0 after 3
+	load_spells()
+
+
+func add_item_to_equipment_panel(item_meta: Wearable_Item):
+	var item_to_equip
+	if item_meta.item_type == Wearable_Item.ITEM_TYPE.SPELL:
+		item_to_equip = Globals.item_resources.master_spell_book[item_meta.item_id]
+	elif item_meta.item_type == Wearable_Item.ITEM_TYPE.MELEE:
+		item_to_equip = Globals.item_resources.master_weapon_book[item_meta.item_id]
+	else:
+		item_to_equip = Globals.item_resources.master_weapon_book[item_meta.item_id]
 	
-func load_spells():
-	# find spells that are unlocked
+
+	var texture_rect = TextureRect.new()
+	texture_rect.texture = item_meta.item_graphic.texture
+	texture_rect.stretch_mode = TextureRect.STRETCH_SCALE  # Adjust scaling
 	
-	# player_data_resource.spells.append()
-	for spell_key in Globals.item_resources.master_spell_book:
-		var spell = Globals.item_resources.master_spell_book[spell_key]
-		# Check if the spell is unlocked
-		if spell.is_unlocked:
-			available_spells[spell_key] = spell
+	
+	
+	match item_meta.item_equip_location:
+		Wearable_Item.WEARABLE_LOCATION.Primary_Hand:
+			Globals.in_game_ui.primary_panel.add_child(texture_rect)
+		Wearable_Item.WEARABLE_LOCATION.Secondary_Hand:
+			Globals.in_game_ui.secondary_panel.add_child(texture_rect)
+		Wearable_Item.WEARABLE_LOCATION.Arms:
+			Globals.in_game_ui.arms_panel.add_child(texture_rect)
+		Wearable_Item.WEARABLE_LOCATION.Feet:
+			pass
+		Wearable_Item.WEARABLE_LOCATION.Head:
+			Globals.in_game_ui.head_panel.add_child(texture_rect)
+		Wearable_Item.WEARABLE_LOCATION.Legs:
+			Globals.in_game_ui.legs_panel.add_child(texture_rect)
+		Wearable_Item.WEARABLE_LOCATION.Spells:
+			append_to_spells(item_meta)
+
+
 
 
 func get_input():

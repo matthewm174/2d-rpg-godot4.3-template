@@ -8,12 +8,13 @@ var spell_cast_time: float
 var spell_magnitude: float
 var is_unlocked: bool
 
+
 enum SPELL_TYPES {
 	WATER = 0, FIRE = 1, EARTH = 2, AIR = 3
 }
 
 
-func _init(stype, sdmg, srng, sct, smag, iu, graphic, spname):
+func _init(stype, sdmg, srng, sct, smag, iu, graphic, spname, itmtype: Wearable_Item.ITEM_TYPE, equiploc: Wearable_Item.WEARABLE_LOCATION, itemid: String):
 	spell_type = stype
 	spell_damage = sdmg
 	spell_range = srng
@@ -24,3 +25,5 @@ func _init(stype, sdmg, srng, sct, smag, iu, graphic, spname):
 	item_modifiers = []
 	item_graphic = graphic
 	item_name = spname
+	item_equip_location = equiploc
+	item_id = itemid

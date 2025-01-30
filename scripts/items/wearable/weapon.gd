@@ -8,9 +8,7 @@ var description
 enum DAMAGE_TYPES {
 	SLASH, PIERCE, BLUNT
 }
-enum ITEM_TYPES {
-	MAGIC, MELEE, PROJECTILE
-}
+
 enum ITEM_MODIFIERS {
 	ATTACK_BOOST,
 	DEFENSE_BOOST,
@@ -21,7 +19,17 @@ enum ITEM_MODIFIERS {
 
 
 
-func _init(dmg: float, dmg_type: DAMAGE_TYPES, is_rang: bool, descr: String, graphic: Sprite2D, uniqueness: UNIQUENESS, modifiers: Array[Item_Modifier], wepname: String) -> void:
+func _init(dmg: float, 
+dmg_type: DAMAGE_TYPES, 
+is_rang: bool, 
+descr: String, 
+graphic: Sprite2D, 
+uniqueness: Wearable_Item.UNIQUENESS, 
+modifiers: Array[Item_Modifier],
+wepname: String, 
+itmtype: Wearable_Item.ITEM_TYPE, 
+equiploc: Wearable_Item.WEARABLE_LOCATION, itemid: String) -> void:
+
 	damage_type = dmg_type
 	damage = dmg
 	item_graphic = graphic
@@ -31,4 +39,8 @@ func _init(dmg: float, dmg_type: DAMAGE_TYPES, is_rang: bool, descr: String, gra
 	item_uniqueness = uniqueness
 	item_modifiers = modifiers
 	item_name = wepname
+	item_type = itmtype
+	item_equip_location = equiploc
+	item_id = itemid
+	
 	

@@ -8,7 +8,26 @@ enum UNIQUENESS {
 	RARE,
 	ANCIENT
 }
-#var item_type 
+enum WEARABLE_LOCATION {
+	Primary_Hand = 0,
+	Secondary_Hand = 1,
+	Head = 2, 
+	Arms = 3,
+	Legs = 4,
+	Feet = 5,
+	Spells = 6,
+}
+enum ITEM_TYPE {
+	SPELL,
+	MELEE,
+	ARM_ARMOR,
+	HEAD_ARMOR,
+	SHIELD
+}
+
+
+var item_equip_location: WEARABLE_LOCATION
+var item_type: ITEM_TYPE
 var item_graphic: Sprite2D #display graphic inv
 var item_uniqueness: UNIQUENESS
 var item_modifiers: Array[Item_Modifier]

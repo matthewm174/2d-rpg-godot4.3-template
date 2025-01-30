@@ -4,9 +4,9 @@ var equipment_slots: Dictionary
 
 
 func _init():
-	equipment_slots[Globals.WEARABLE_LOCATIONS.Primary_Hand] = Wearable_Item
-	equipment_slots[Globals.WEARABLE_LOCATIONS.Secondary_Hand] = Wearable_Item
-	equipment_slots[Globals.WEARABLE_LOCATIONS.Head] = Wearable_Item
-	equipment_slots[Globals.WEARABLE_LOCATIONS.Arms] = Wearable_Item
-	equipment_slots[Globals.WEARABLE_LOCATIONS.Legs] = Wearable_Item
-	equipment_slots[Globals.WEARABLE_LOCATIONS.Feet] = Wearable_Item
+	equipment_slots[Wearable_Item.WEARABLE_LOCATION.Primary_Hand] = Wearable_Item
+	equipment_slots[Wearable_Item.WEARABLE_LOCATION.Secondary_Hand] = Wearable_Item
+	equipment_slots[Wearable_Item.WEARABLE_LOCATION.Head] = Wearable_Item
+	equipment_slots[Wearable_Item.WEARABLE_LOCATION.Arms] = Wearable_Item
+	equipment_slots[Wearable_Item.WEARABLE_LOCATION.Legs] = Wearable_Item
+	equipment_slots[Wearable_Item.WEARABLE_LOCATION.Feet] = Wearable_Item

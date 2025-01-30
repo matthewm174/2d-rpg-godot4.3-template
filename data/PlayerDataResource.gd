@@ -53,7 +53,7 @@ func get_player_data():
 			Globals.player_data.equipped_spells[0] = Globals.item_resources.master_spell_book["fire_ball"]
 			Globals.player_data.inventory.inv_slots.append(Globals.item_resources.master_spell_book["fire_ball"])
 			Globals.player_data.inventory.inv_slots.append(Globals.item_resources.master_weapon_book["short_sword"])
-			Globals.player_data.equipment.equipment_slots[Globals.WEARABLE_LOCATIONS.Primary_Hand] = Globals.item_resources.master_weapon_book["short_sword"]
+			#Globals.player_data.equipment.equipment_slots[Wearable_Item.WEARABLE_LOCATION.Primary_Hand] = Globals.item_resources.master_weapon_book["short_sword"]
 		
 
 	else:
