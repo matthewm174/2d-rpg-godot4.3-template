@@ -55,7 +55,6 @@ func load_inventory():
 	
 	
 func load_spells():
-	
 	for i in range(max_equippable_spells):
 		var spell_panels = Globals.in_game_ui.spell_grid_container.get_children() #spells panels
 		if Globals.player_data.equipped_spells[i]:
@@ -66,12 +65,10 @@ func load_spells():
 			print(Globals.player_data.equipped_spells[i].is_unlocked)
 			print(Globals.player_data.equipped_spells[i].item_uniqueness)
 			print(Globals.player_data.equipped_spells[i].item_graphic)
-
 			print(spell_panels[i])
 			var texture_rect = TextureRect.new()
-			#var testing1 = Globals.item_resources.master_spell_book["fire_ball"]
-			texture_rect.texture = Globals.item_resources.master_spell_book["fire_ball"].item_graphic.texture  # Set the texture
-			texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED  # Adjust the stretch mode
+			texture_rect.texture = Globals.item_resources.master_spell_book["fire_ball"].item_graphic.texture
+			texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			spell_panels[i].add_child(texture_rect)
 			spell_equip_index+=1
 
@@ -80,9 +77,8 @@ func equip_inv_item(item_metadata: Wearable_Item):
 
 func append_to_spells(value):
 	Globals.player_data.equipped_spells[spell_equip_index] = value
-	spell_equip_index = (spell_equip_index + 1) % 4  # Reset to 0 after 3
+	spell_equip_index = (spell_equip_index + 1) % 4
 	load_spells()
-
 
 func add_item_to_equipment_panel(item_meta: Wearable_Item):
 	var item_to_equip
@@ -92,14 +88,9 @@ func add_item_to_equipment_panel(item_meta: Wearable_Item):
 		item_to_equip = Globals.item_resources.master_weapon_book[item_meta.item_id]
 	else:
 		item_to_equip = Globals.item_resources.master_weapon_book[item_meta.item_id]
-	
-
 	var texture_rect = TextureRect.new()
 	texture_rect.texture = item_meta.item_graphic.texture
-	texture_rect.stretch_mode = TextureRect.STRETCH_SCALE  # Adjust scaling
-	
-	
-	
+	texture_rect.stretch_mode = TextureRect.STRETCH_SCALE
 	match item_meta.item_equip_location:
 		Wearable_Item.WEARABLE_LOCATION.Primary_Hand:
 			Globals.in_game_ui.primary_panel.add_child(texture_rect)
@@ -115,9 +106,6 @@ func add_item_to_equipment_panel(item_meta: Wearable_Item):
 			Globals.in_game_ui.legs_panel.add_child(texture_rect)
 		Wearable_Item.WEARABLE_LOCATION.Spells:
 			append_to_spells(item_meta)
-
-
-
 
 func get_input():
 	var input_direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -144,10 +132,9 @@ func handle_attack():
 			player_animated_sprite_2d.play("man_attack_left")
 		Direction.RIGHT:
 			player_animated_sprite_2d.play("man_attack_right")
-	
 
 func is_animating():
-	# chain together animation blockers	
+	# chain together animation blockers
 	return is_animating_spell || is_animating_attack
 
 func set_animation():
@@ -158,8 +145,7 @@ func set_animation():
 		else:
 			Globals.in_game_ui.hide_inventory()
 			showing_inventory = false
-			
-		
+
 	if Input.is_action_just_pressed("menu"):
 		if not showing_menu:
 			Globals.in_game_ui.show_main_menu()
