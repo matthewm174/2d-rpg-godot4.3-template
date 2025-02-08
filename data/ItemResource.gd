@@ -28,9 +28,10 @@ func _init():
 	Wearable_Item.ITEM_TYPE.MELEE, 
 	Wearable_Item.WEARABLE_LOCATION.Primary_Hand, "short_sword")
 	
-	var sp_fire_ball: Spell = Spell.new(Spell.SPELL_TYPES.FIRE, 5.0, 10.0, 1.0, 2.0, 
+	var sp_fire_ball: Spell = Spell.new(4.0, 30.0, 80.0, Spell.SPELL_TYPES.FIRE, 5.0, 200.0, 1.0, 2.0, 
 	true, load_sprite_with_texture("res://sprites/inventory/spells/fire_ball_inventory.png"), 
-	"Fire Ball", Wearable_Item.ITEM_TYPE.SPELL, Wearable_Item.WEARABLE_LOCATION.Spells, "fire_ball")
+	"Fire Ball", Wearable_Item.ITEM_TYPE.SPELL, Wearable_Item.WEARABLE_LOCATION.Spells, 
+	"fire_ball", "res://sprites/spells/fireball_0.png", "res://sprites/explosions/explosion_dummy.png")
 	
 	
 	master_spell_book["fire_ball"] = sp_fire_ball

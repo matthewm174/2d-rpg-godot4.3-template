@@ -1,13 +1,14 @@
 extends CharacterBody2D
 @onready var player_animated_sprite_2d: AnimatedSprite2D = $PlayerAnimatedSprite2d
 @onready var anim_lock_timer: Timer = $Timer
-
+const Projectile = preload("res://scripts/projectile/Projectile.tscn")
 @export var speed = 100
 var player_inventory: Inventory
 var player_data_resource: PlayerDataResource
+@onready var character_body_2d: CharacterBody2D = $"."
 
 
-enum Direction { RIGHT, LEFT, UP, DOWN }
+enum Direction { RIGHT, LEFT, UP, DOWN}
 var facing_direction = Direction.DOWN
 var move_dir = facing_direction
 var is_animating_spell = false;
@@ -18,6 +19,14 @@ var equipped_spells = {}
 var showing_menu = false;
 var max_equippable_spells = 4;
 var spell_equip_index = 0
+var current_spell: Spell
+
+
+var aim_angle
+
+var knockback_velocity: Vector2 = Vector2.ZERO # Current knockback velocity
+var is_knockback_active: bool = false     
+
 func _init():
 	Globals.current_player = self
 	
@@ -32,7 +41,8 @@ func _ready():
 	)
 	#spell_equip_index = Globals.player_data.equipped_spells.size()
 	
-	
+
+
 func load_player_data():
 	Globals.player_data.get_player_data()
 	for spell_key in Globals.item_resources.master_spell_book:
@@ -43,7 +53,71 @@ func load_player_data():
 	if Globals.player_data:
 		load_spells()
 		load_inventory()
+		
+func set_current_spell():
+	if Input.is_action_just_pressed("spell_0"):
+		current_spell = Globals.player_data.equipped_spells[0]
+	if Input.is_action_just_pressed("spell_1"):
+		current_spell = Globals.player_data.equipped_spells[1]
+	if Input.is_action_just_pressed("spell_2"):
+		current_spell = Globals.player_data.equipped_spells[2]
+	if Input.is_action_just_pressed("spell_3"):
+		current_spell = Globals.player_data.equipped_spells[3]
 
+
+func create_projectile_for_current_spell():
+	
+	if current_spell == null:
+		return
+	# Get the direction to the mouse
+	var mouse_position = get_global_mouse_position()
+	var direction = (mouse_position - position).normalized()
+	
+	# Spawn the projectile at the player's position
+	var projectile = Projectile.instantiate()
+	projectile.direction = direction
+	print(direction)
+	projectile.speed = current_spell.spell_speed
+	projectile.explosion_duration = current_spell.explosion_dur
+	projectile.explosion_radius = current_spell.explosion_radius
+	projectile.damage = current_spell.spell_damage
+	projectile.explosion_sprite_path = current_spell.explode_animation
+	
+	projectile.animation_name="missle"
+	projectile.distance = current_spell.spell_range
+	projectile.frame_count=7
+	
+	if aim_angle < 90 and aim_angle > -90:
+		projectile.angle = aim_angle - 180
+	else:
+			
+		projectile.angle = aim_angle
+	print("aim angle", aim_angle)
+	projectile.sprite_path=current_spell.spell_animation
+	projectile.frame_size = Vector2i(64,64)
+	projectile.position = position
+	
+	get_tree().current_scene.add_child(projectile)
+	
+	
+
+
+	# Rotate the projectile to face the mouse
+	var angle = rad_to_deg(direction.angle())
+	if angle >= -45 and angle < 45:
+		projectile.rotation_degrees = 0  # Right
+	elif angle >= 45 and angle < 135:
+		projectile.rotation_degrees = 90  # Up
+	elif angle >= 135 or angle < -135:
+		projectile.rotation_degrees = 180  # Left
+	else:
+		projectile.rotation_degrees = 270  # Down
+	
+	# Add the projectile to the scene
+	
+
+	
+	
 
 	
 func load_inventory():
@@ -168,35 +242,71 @@ func set_animation():
 		handle_attack()
 		return
 		
+	var mouse_position = get_global_mouse_position()
+	var direction = (mouse_position - global_position).normalized()
 	
-	if not is_animating() and Input.is_action_pressed("move_left"):
-		player_animated_sprite_2d.play("man_walk_left")
-		move_dir = Direction.LEFT
-	elif Input.is_action_pressed("move_right"):
-		player_animated_sprite_2d.play("man_walk_right")
-		move_dir = Direction.RIGHT
-	elif Input.is_action_pressed("move_down"):
-		player_animated_sprite_2d.play("man_walk_down")
-		move_dir = Direction.DOWN
-	elif Input.is_action_pressed("move_up"):
-		player_animated_sprite_2d.play("man_walk_up")
-		move_dir = Direction.UP
-	else:
-		#if no action pressed, idle
-		match move_dir:
-			Direction.UP:
-				player_animated_sprite_2d.play("man_idle_up")
-			Direction.DOWN:
-				player_animated_sprite_2d.play("man_idle_down")
-			Direction.LEFT:
-				player_animated_sprite_2d.play("man_idle_left")
-			Direction.RIGHT:
-				player_animated_sprite_2d.play("man_idle_right")
+	# Calculate the angle in degrees
+	var angle = rad_to_deg(direction.angle())
+	if not is_animating():
+		if Input.is_action_pressed("move_left") or Input.is_action_pressed("move_right") or Input.is_action_pressed("move_up") or Input.is_action_pressed("move_down"):
+			match move_dir:
+				Direction.RIGHT:
+					player_animated_sprite_2d.play("man_walk_right")
+				Direction.UP:
+					player_animated_sprite_2d.play("man_walk_up")
+				Direction.LEFT:
+					player_animated_sprite_2d.play("man_walk_left")
+				Direction.DOWN:
+					player_animated_sprite_2d.play("man_walk_down")
+		else:
+			# Play idle animation based on move_dir
+			match move_dir:
+				Direction.RIGHT:
+					player_animated_sprite_2d.play("man_idle_right")
+				Direction.UP:
+					player_animated_sprite_2d.play("man_idle_up")
+				Direction.LEFT:
+					player_animated_sprite_2d.play("man_idle_left")
+				Direction.DOWN:
+					player_animated_sprite_2d.play("man_idle_down")
+				
+
+func apply_knockback(direction: Vector2):
+	#dummy vars, make configurable
+	var knockback_strength: float = 500.0
+	var knockback_duration: float = 0.2 
+	direction = direction.normalized()
+	knockback_velocity = direction * knockback_strength
+	
+	is_knockback_active = true
+	await get_tree().create_timer(knockback_duration).timeout
+	is_knockback_active = false
+
 
 func _physics_process(delta):
+	var velocity = Vector2.ZERO
+	
+	if is_knockback_active:
+		velocity = knockback_velocity
+	
 	if not is_animating():
 		get_input()
 		move_and_slide()
 
 func _process(delta):
+	var mouse_position = get_global_mouse_position()
+	var direction = (mouse_position - global_position).normalized()
+	
+	var direction_local = direction.rotated(-rotation)
+	aim_angle = rad_to_deg(direction_local.angle())
+	
+	if aim_angle >= -45 and aim_angle < 45:
+		move_dir = Direction.RIGHT  # Right
+	elif aim_angle >= 45 and aim_angle < 135:
+		move_dir = Direction.DOWN # Up
+	elif aim_angle >= 135 or aim_angle < -135:
+		move_dir = Direction.LEFT  # Left
+	else:
+		move_dir = Direction.UP # Down
 	set_animation()
+	set_current_spell()

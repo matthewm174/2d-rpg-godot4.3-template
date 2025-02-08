@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://cw7i1im1grj0g"]
+
+[ext_resource type="Script" path="res://scripts/projectile/projectile.gd" id="2_atd4c"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_pehil"]
+radius = 6.0
+height = 24.0
+
+[node name="Projectile" type="Node2D"]
+script = ExtResource("2_atd4c")
+
+[node name="ProjectileArea2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ProjectileArea2D"]
+position = Vector2(0, 6)
+shape = SubResource("CapsuleShape2D_pehil")

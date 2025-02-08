@@ -7,7 +7,11 @@ func _ready():
 	frame_changed.connect(_on_frame_changed)
 
 func _on_frame_changed():
-	if animation == "spell_cast" and frame == 3:  # Adjust frame number
-		emit_signal("spell_cast")
-	elif animation == "slash_attack" and frame == 2:
-		emit_signal("attack_slash")
+	
+	var cast_regex = RegEx.new()
+	cast_regex.compile("^man_cast")  # Regex pattern for "starts with man_cast"
+	
+	if cast_regex.search(animation) and frame == 3:
+		Globals.current_player.create_projectile_for_current_spell()	
+	#if animation == "spell_cast" and frame == 3:  # Adjust frame number
+		#Globals.current_player.create_projectile_for_current_spell()

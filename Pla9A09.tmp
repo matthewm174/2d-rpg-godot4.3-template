@@ -756,13 +756,16 @@ _data = {
 
 [node name="CharacterBody2D" type="CharacterBody2D" parent="."]
 script = ExtResource("1_gxfhm")
+speed = null
 
 [node name="PlayerAnimatedSprite2d" type="AnimatedSprite2D" parent="CharacterBody2D"]
+position = Vector2(220, 201)
 sprite_frames = SubResource("SpriteFrames_cn56x")
-animation = &"man_walk_up"
+animation = &"man_attack_down"
 script = ExtResource("5_vn3hn")
 
 [node name="PlayerCollision" type="CollisionShape2D" parent="CharacterBody2D"]
+position = Vector2(220, 202.5)
 shape = SubResource("RectangleShape2D_0g3u7")
 
 [node name="Timer" type="Timer" parent="CharacterBody2D"]
