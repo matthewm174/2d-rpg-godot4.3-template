@@ -82,43 +82,34 @@ func create_projectile_for_current_spell():
 	projectile.explosion_radius = current_spell.explosion_radius
 	projectile.damage = current_spell.spell_damage
 	projectile.explosion_sprite_path = current_spell.explode_animation
-	
 	projectile.animation_name="missle"
 	projectile.distance = current_spell.spell_range
 	projectile.frame_count=7
 	
-	if aim_angle < 90 and aim_angle > -90:
-		projectile.angle = aim_angle - 180
-	else:
-			
-		projectile.angle = aim_angle
-	print("aim angle", aim_angle)
+	#if aim_angle < 90 and aim_angle > -90:
+		#projectile.angle = aim_angle - 180
+	#else:
+			#
+		#projectile.angle = aim_angle
+	#print("aim angle", aim_angle)
 	projectile.sprite_path=current_spell.spell_animation
 	projectile.frame_size = Vector2i(64,64)
 	projectile.position = position
-	
+	var computed_angle = rad_to_deg(direction.angle()) + 180.0
+	projectile.rotation_degrees = fposmod(computed_angle, 360.0)
 	get_tree().current_scene.add_child(projectile)
-	
-	
-
-
-	# Rotate the projectile to face the mouse
-	var angle = rad_to_deg(direction.angle())
-	if angle >= -45 and angle < 45:
-		projectile.rotation_degrees = 0  # Right
-	elif angle >= 45 and angle < 135:
-		projectile.rotation_degrees = 90  # Up
-	elif angle >= 135 or angle < -135:
-		projectile.rotation_degrees = 180  # Left
-	else:
-		projectile.rotation_degrees = 270  # Down
-	
-	# Add the projectile to the scene
-	
 
 	
+	#var angle = rad_to_deg(direction.angle())
+	#if angle >= -45 and angle < 45:
+		#projectile.rotation_degrees = 0  # Right
+	#elif angle >= 45 and angle < 135:
+		#projectile.rotation_degrees = 90  # Up
+	#elif angle >= 135 or angle < -135:
+		#projectile.rotation_degrees = 180  # Left
+	#else:
+		#projectile.rotation_degrees = 270  # Down
 	
-
 	
 func load_inventory():
 	player_inventory = Globals.player_data.inventory

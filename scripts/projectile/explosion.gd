@@ -25,7 +25,7 @@ var is_looping
 var pos
 
 func _ready():
-	animated_sprite_sheet = AnimationUtils.load_spritesheet(sprite_path, frame_size, frame_count, animation_name, 0, pos, is_looping)
+	animated_sprite_sheet = AnimationUtils.load_spritesheet(sprite_path, frame_size, frame_count, animation_name, pos, is_looping)
 	add_child(animated_sprite_sheet)
 	
 	if animated_sprite_sheet is AnimatedSprite2D:

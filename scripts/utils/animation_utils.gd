@@ -71,7 +71,7 @@ static func load_animation_sheet(path: String, frame_size: Vector2i):
 	return animated_sprite
 
 ## only for ONE dimension of sprites
-static func load_spritesheet(sprite_path: String, frame_size: Vector2i, frame_count: int, animation_name, angle, pos, isloop):
+static func load_spritesheet(sprite_path: String, frame_size: Vector2i, frame_count: int, animation_name, pos, isloop):
 	print("Loading sprite sheet from: ", sprite_path)
 	var sprite_frames = SpriteFrames.new()
 	var sprite_sheet = load(sprite_path)
@@ -96,11 +96,9 @@ static func load_spritesheet(sprite_path: String, frame_size: Vector2i, frame_co
 
 	var animated_sprite = AnimatedSprite2D.new()
 	animated_sprite.position = pos
-	animated_sprite.rotation_degrees = angle
 	animated_sprite.frames = sprite_frames
 	animated_sprite.animation = animation_name
 	animated_sprite.play(animation_name)
 	print("Added AnimatedSprite2D with ", frame_count, " frames")
 	
 	return animated_sprite
-	#add_child(animated_sprite)

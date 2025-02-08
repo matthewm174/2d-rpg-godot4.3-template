@@ -27,7 +27,7 @@ var last_pos
 
 func _ready():
 	print("Projectile Position (Global): ", position)
-	animated_sprite_sheet = AnimationUtils.load_spritesheet(sprite_path, frame_size, frame_count, animation_name, angle, Vector2.ZERO, true)
+	animated_sprite_sheet = AnimationUtils.load_spritesheet(sprite_path, frame_size, frame_count, animation_name, Vector2.ZERO, true)
 	print("AnimatedSprite2D Position (Local): ", animated_sprite_sheet.position)
 
 	initial_position = global_position

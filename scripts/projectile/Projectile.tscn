@@ -8,6 +8,11 @@ height = 24.0
 
 [node name="Projectile" type="Node2D"]
 script = ExtResource("2_atd4c")
+speed = null
+distance = null
+damage = null
+projectile_type = null
+spell_magnitude = null
 
 [node name="ProjectileArea2D" type="Area2D" parent="."]
 
