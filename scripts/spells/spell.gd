@@ -30,7 +30,6 @@ func _init(explode_dur, explode_rad, speed, stype, sdmg, srng, sct, smag, iu, gr
 	explode_animation = explode_anim
 	explosion_radius = explode_rad
 	explosion_dur = explode_dur
-	
 	is_unlocked = iu
 	item_uniqueness = UNIQUENESS.COMMON
 	item_modifiers = []

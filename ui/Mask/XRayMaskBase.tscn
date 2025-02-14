@@ -1,0 +1,58 @@
+[gd_scene load_steps=7 format=3 uid="uid://d0m0sus45c0"]
+
+[ext_resource type="Shader" path="res://shaders/secLvl.gdshader" id="1_kqso7"]
+[ext_resource type="Shader" path="res://shaders/camera_1.gdshader" id="1_xa3o7"]
+
+[sub_resource type="GDScript" id="GDScript_phpmx"]
+script/source = "extends Node2D
+@onready var back_buffer_copy: BackBufferCopy = $BackBufferCopy
+@onready var mesh_instance_2d: MeshInstance2D = $BackBufferCopy/MeshInstance2D
+
+@export var mask_texture: Texture2D
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bmu32"]
+shader = ExtResource("1_xa3o7")
+shader_parameter/resolution = Vector2(320, 180)
+shader_parameter/scan_line_amount = 0.1
+shader_parameter/warp_amount = 0.1
+shader_parameter/noise_amount = 0.02
+shader_parameter/interference_amount = 0.2
+shader_parameter/grille_amount = 0.1
+shader_parameter/grille_size = 1.0
+shader_parameter/vignette_amount = 0.3
+shader_parameter/vignette_intensity = 0.2
+shader_parameter/aberation_amount = 0.2
+shader_parameter/roll_line_amount = 0.01
+shader_parameter/roll_speed = -1.0
+shader_parameter/scan_line_strength = -1.0
+shader_parameter/pixel_strength = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_v02nm"]
+shader = ExtResource("1_kqso7")
+shader_parameter/center = Vector2(0.5, 0.5)
+shader_parameter/radius = 0.4
+shader_parameter/feather = 0.2
+shader_parameter/distortion_strength = 0.02
+shader_parameter/blur_radius = 0.1
+shader_parameter/time_speed = 1.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_l70em"]
+material = SubResource("ShaderMaterial_v02nm")
+
+[node name="XRayMaskBase" type="Node2D"]
+z_index = 1
+z_as_relative = false
+script = SubResource("GDScript_phpmx")
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="."]
+z_index = 2
+z_as_relative = false
+copy_mode = 2
+
+[node name="MeshInstance2D" type="MeshInstance2D" parent="BackBufferCopy"]
+z_index = 1
+z_as_relative = false
+material = SubResource("ShaderMaterial_bmu32")
+scale = Vector2(200, 200)
+mesh = SubResource("SphereMesh_l70em")

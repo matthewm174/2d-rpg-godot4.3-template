@@ -1,18 +1,63 @@
 extends Node
 class_name AnimationUtils
 
-## FOR LARGER ANIMATION SHEETS! path = location of res, frame_size is w by h
-static func load_animation_sheet(path: String, frame_size: Vector2i):
-	var sprite_sheet = Image.load_from_file(path)  # Load the PNG file
-	var texture = ImageTexture.create_from_image(sprite_sheet)  # Create a texture from the image
+
+## equipment sprite loader, assumes 4 directions to draw
+static func load_equipment_animation_sheet(path: String, frame_size: Vector2i):
+	var sprite_sheet = Image.load_from_file(path)
+	if not sprite_sheet:
+		print("could not find spritesheet for %s" % path)
+		return
+	var texture = ImageTexture.create_from_image(sprite_sheet)
 	
-	var animated_sprite = AnimatedSprite2D.new()  # Create a single AnimatedSprite2D
-	var sprite_frames = SpriteFrames.new()  # Create a SpriteFrames resource
+	var animated_sprite = AnimatedSprite2D.new()
+	var sprite_frames = SpriteFrames.new()
 	
-	var sheet_width = sprite_sheet.get_width()  # Width of the entire sprite sheet
-	var sheet_height = sprite_sheet.get_height()  # Height of the entire sprite sheet
+	var sheet_width = sprite_sheet.get_width()
+	var sheet_height = sprite_sheet.get_height()
 	
-	# Define animation types and their corresponding row indices
+	var animation_types = {
+		"up": 0,
+		"left": 1,
+		"down": 2,
+		"right": 3,
+	}
+	
+	for anim_name in animation_types:
+		sprite_frames.add_animation(anim_name)
+		var row = animation_types[anim_name]
+		var frames = []
+		var y_start = row * frame_size.y
+		for x in range(0, sheet_width, frame_size.x):
+			if x + frame_size.x > sheet_width:
+				break
+			
+			var frame = sprite_sheet.get_region(Rect2(x, y_start, frame_size.x, frame_size.y))
+			var frame_texture = ImageTexture.create_from_image(frame)
+			frame_texture.set_size_override(Vector2i(frame_size.x,frame_size.y))
+			frames.append(frame_texture)
+		
+		for frame_texture in frames:
+			sprite_frames.add_frame(anim_name, frame_texture)
+		
+		sprite_frames.set_animation_speed(anim_name, 5)
+		sprite_frames.set_animation_loop(anim_name, false)
+	
+	animated_sprite.frames = sprite_frames
+	
+	return animated_sprite
+
+## FOR CHARACTER ANIMATION SHEETS! path = location of res, frame_size is w by h, assumes 3 actions x 4 dir and death
+static func load_character_animation_sheet(path: String, frame_size: Vector2i):
+	var sprite_sheet = Image.load_from_file(path)
+	var texture = ImageTexture.create_from_image(sprite_sheet)
+	
+	var animated_sprite = AnimatedSprite2D.new()
+	var sprite_frames = SpriteFrames.new()
+	
+	var sheet_width = sprite_sheet.get_width()
+	var sheet_height = sprite_sheet.get_height()
+	
 	var animation_types = {
 		"walk_up": 0,
 		"walk_left": 1,
@@ -29,45 +74,33 @@ static func load_animation_sheet(path: String, frame_size: Vector2i):
 		"death": 12
 	}
 	
-	# Iterate through each animation type
 	for anim_name in animation_types:
 		sprite_frames.add_animation(anim_name)
-		var row = animation_types[anim_name]  # Get the row index for the animation
-		var frames = []  # Array to store frames for this animation
-		
-		# Calculate the starting y-position for the row
+		var row = animation_types[anim_name]
+		var frames = [] 
 		var y_start = row * frame_size.y
 		
 		# Iterate through columns in the row
 		for x in range(0, sheet_width, frame_size.x):
-			# Check if the frame is empty or beyond the sheet's width
 			if x + frame_size.x > sheet_width:
-				break  # End of the row reached
+				break  
 			
-			# Extract the frame as a sub-image
 			var frame = sprite_sheet.get_region(Rect2(x, y_start, frame_size.x, frame_size.y))
 			var frame_texture = ImageTexture.create_from_image(frame)
 			frame_texture.set_size_override(Vector2i(frame_size.x,frame_size.y))
 			
-			# Add the frame texture to the frames array
 			frames.append(frame_texture)
 		
-		# Add the animation to the SpriteFrames resource
 		
 		for frame_texture in frames:
 			sprite_frames.add_frame(anim_name, frame_texture)
 		
-		# Set the animation speed (optional)
-		sprite_frames.set_animation_speed(anim_name, 10)  # 10 FPS, adjust as needed
+		sprite_frames.set_animation_speed(anim_name, 5) 
 		sprite_frames.set_animation_loop(anim_name, false)
 	
-	# Assign the SpriteFrames resource to the AnimatedSprite2D
 	animated_sprite.frames = sprite_frames
 	
-	# Set the default animation (optional)
-	#animated_sprite.animation = "walk_down"
-	#animated_sprite.play()  # Start playing the default animation
-	
+
 	return animated_sprite
 
 ## only for ONE dimension of sprites

@@ -17,6 +17,11 @@ class_name In_Game_Ui
 @onready var main_menu_item_list: ItemList = $MainMenuItemList
 @onready var spell_grid_container: GridContainer = $SpellGridContainer
 
+@onready var skill_stat_allocator: SkillStatAllocator = $PlayerUi/SkillStatAllocator
+
+
+var default_stylebox
+var selected_stylebox
 enum MENU_OPTIONS { SAVE=0, QUIT=1 }
 
 func _init():
@@ -29,19 +34,33 @@ func hide_main_menu():
 	main_menu_item_list.visible = false
 
 func _ready() -> void:
+	default_stylebox = StyleBoxFlat.new()
+	default_stylebox.bg_color = Color(0.2, 0.2, 0.2, 0.3) 
+	default_stylebox.border_color = Color(0.5, 0.5, 0.5, 1.0) 
+	default_stylebox.border_width_left = 2
+	default_stylebox.border_width_right = 2
+	default_stylebox.border_width_top = 2
+	default_stylebox.border_width_bottom = 2
+	
+	selected_stylebox = StyleBoxFlat.new()
+	selected_stylebox.bg_color = Color(0.1, 0.5, 0.8, 0.3) 
+	selected_stylebox.border_color = Color(0.8, 0.8, 0.8, 1.0)  
+	selected_stylebox.border_width_left = 2
+	selected_stylebox.border_width_right = 2
+	selected_stylebox.border_width_top = 2
+	selected_stylebox.border_width_bottom = 2
 	player_ui_root.visible = true
-	player_ui.visible =false
+	player_ui.visible = false
 	create_spell_panels()
-	#Globals.current_player.load
+
 
 func create_spell_panels():
 	for i in range(Globals.current_player.max_equippable_spells):
-		var style = StyleBoxFlat.new()
-		style.bg_color = Color(0.1, 0.1, 0.1)
 		var panel = Panel.new()
 		panel.name = "spell_%d" % [i]
-		panel.add_theme_stylebox_override("panel", style)
+		panel.add_theme_stylebox_override("panel", default_stylebox)
 		panel.set_custom_minimum_size(Vector2(64, 64))
+		panel.z_index = 1
 		spell_grid_container.add_child(panel)
 		
 
@@ -62,7 +81,6 @@ func hide_inventory():
 
 func _on_inventory_item_list_item_selected(index: int) -> void:
 	update_description_panel()
-	pass # Replace with function body.
 
 func update_description_panel():
 	## dummy code, delete

@@ -10,8 +10,6 @@ var impulse = Vector2.ZERO
 func is_animating():
 	# chain together animation blockers	
 	return is_animating_spell || is_animating_attack
-
-
 var knockback_velocity = Vector2()
 
 @export var health = 10
@@ -22,6 +20,9 @@ var current_target = 0
 var caster
 var is_knockback_active
 var enemy_col = CollisionShape2D.new()
+var target_position
+var direction
+var vision_radius
 func _init(hp: float, spd: float, pat_points: Array[Vector2], animations: AnimatedSprite2D, spells: Array[Spell], weapon: Wearable_Item):
 	health = hp
 	speed = spd
@@ -33,27 +34,23 @@ func _init(hp: float, spd: float, pat_points: Array[Vector2], animations: Animat
 	enemy_animated_sprite_2d.animation_finished.connect(_on_animation_finished)
 
 func _process(delta: float) -> void:
-
 	if health <= 0 and not isDead:
 		play_death()
 
-	
 func kill_enemy():
 	enemy_animated_sprite_2d.queue_free()
 	enemy_col.queue_free()
 	queue_free()
-	
+
 func play_death():
 	if not isDead:
 		isDead = true
 		enemy_animated_sprite_2d.play("death")
-		
 
 func _on_animation_finished():
 	if enemy_animated_sprite_2d.animation == "death":  # Check if the finished animation is "death"
 		kill_enemy()
-	
-	
+
 func _ready() -> void:
 
 	var col_shape = RectangleShape2D.new()
@@ -85,8 +82,6 @@ func apply_knockback(knockback_force: Vector2):
 	
 
 func _physics_process(delta):
-	#var target_position = patrol_points[current_target]
-	#var direction = (target_position - global_position).normalized()
 	if isDead:
 		return
 	if patrol_points.is_empty():
@@ -102,8 +97,8 @@ func _physics_process(delta):
 			is_knockback_active = false
 		return  # Exit early to skip patrol logic
 	else:
-		var target_position = patrol_points[current_target]
-		var direction = (target_position - global_position).normalized()
+		target_position = patrol_points[current_target]
+		direction = (target_position - global_position).normalized()
 		velocity = direction * speed
 		move_and_slide()
 		set_animation_from_direction(direction)

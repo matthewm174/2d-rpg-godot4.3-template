@@ -1,4 +1,5 @@
 extends CharacterBody2D
+class_name PlayerCharacterBody2d
 @onready var player_animated_sprite_2d: AnimatedSprite2D = $PlayerAnimatedSprite2d
 @onready var anim_lock_timer: Timer = $Timer
 const Projectile = preload("res://scripts/projectile/Projectile.tscn")
@@ -6,6 +7,8 @@ const Projectile = preload("res://scripts/projectile/Projectile.tscn")
 var player_inventory: Inventory
 var player_data_resource: PlayerDataResource
 @onready var character_body_2d: CharacterBody2D = $"."
+@onready var camera_2d: Camera2D = $Camera2D
+#const WORLD = preload("res://World.tscn")
 
 
 enum Direction { RIGHT, LEFT, UP, DOWN}
@@ -20,11 +23,11 @@ var showing_menu = false;
 var max_equippable_spells = 4;
 var spell_equip_index = 0
 var current_spell: Spell
-
-
+var current_spell_panel
+var weapon_sprite: AnimatedSprite2D
 var aim_angle
 
-var knockback_velocity: Vector2 = Vector2.ZERO # Current knockback velocity
+var knockback_velocity: Vector2 = Vector2.ZERO
 var is_knockback_active: bool = false     
 
 func _init():
@@ -33,36 +36,52 @@ func _init():
 	
 
 func _ready():
+	
 	load_player_data()
 	anim_lock_timer.wait_time = 0.5
 	anim_lock_timer.timeout.connect(func(): 
 		is_animating_spell = false;
 		is_animating_attack = false;
 	)
-	#spell_equip_index = Globals.player_data.equipped_spells.size()
-	
+
 
 
 func load_player_data():
 	Globals.player_data.get_player_data()
 	for spell_key in Globals.item_resources.master_spell_book:
 		var spell = Globals.item_resources.master_spell_book[spell_key]
-		# Check if the spell is unlocked
 		if spell.is_unlocked:
 			available_spells[spell_key] = spell
 	if Globals.player_data:
 		load_spells()
 		load_inventory()
 		
-func set_current_spell():
-	if Input.is_action_just_pressed("spell_0"):
-		current_spell = Globals.player_data.equipped_spells[0]
-	if Input.is_action_just_pressed("spell_1"):
-		current_spell = Globals.player_data.equipped_spells[1]
-	if Input.is_action_just_pressed("spell_2"):
-		current_spell = Globals.player_data.equipped_spells[2]
-	if Input.is_action_just_pressed("spell_3"):
-		current_spell = Globals.player_data.equipped_spells[3]
+func highlight_spell_selection(panel: Panel) -> void:
+	for pnl in Globals.in_game_ui.spell_grid_container.get_children():
+		if pnl is Panel:
+			clear_spell_selection(panel)
+	
+	current_spell_panel = panel
+	current_spell_panel.z_index = 3
+
+
+func clear_spell_selection(panel: Panel) -> void:
+	panel.add_theme_stylebox_override("panel", Globals.in_game_ui.default_stylebox)
+
+func set_current_spell() -> void:
+	for child in Globals.in_game_ui.spell_grid_container.get_children():
+		if child is Panel:
+			clear_spell_selection(child)
+	
+	# Check which spell key was pressed
+	for i in range(4):  # max 4
+		if Input.is_action_just_pressed("spell_" + str(i)):
+			current_spell = Globals.player_data.equipped_spells[i]
+			highlight_spell_selection(Globals.in_game_ui.spell_grid_container.get_children()[i])
+			break 
+	if(current_spell_panel):
+		current_spell_panel.add_theme_stylebox_override("panel", Globals.in_game_ui.selected_stylebox)
+	
 
 
 func create_projectile_for_current_spell():
@@ -85,13 +104,7 @@ func create_projectile_for_current_spell():
 	projectile.animation_name="missle"
 	projectile.distance = current_spell.spell_range
 	projectile.frame_count=7
-	
-	#if aim_angle < 90 and aim_angle > -90:
-		#projectile.angle = aim_angle - 180
-	#else:
-			#
-		#projectile.angle = aim_angle
-	#print("aim angle", aim_angle)
+
 	projectile.sprite_path=current_spell.spell_animation
 	projectile.frame_size = Vector2i(64,64)
 	projectile.position = position
@@ -99,17 +112,6 @@ func create_projectile_for_current_spell():
 	projectile.rotation_degrees = fposmod(computed_angle, 360.0)
 	get_tree().current_scene.add_child(projectile)
 
-	
-	#var angle = rad_to_deg(direction.angle())
-	#if angle >= -45 and angle < 45:
-		#projectile.rotation_degrees = 0  # Right
-	#elif angle >= 45 and angle < 135:
-		#projectile.rotation_degrees = 90  # Up
-	#elif angle >= 135 or angle < -135:
-		#projectile.rotation_degrees = 180  # Left
-	#else:
-		#projectile.rotation_degrees = 270  # Down
-	
 	
 func load_inventory():
 	player_inventory = Globals.player_data.inventory
@@ -120,6 +122,7 @@ func load_inventory():
 	
 	
 func load_spells():
+
 	for i in range(max_equippable_spells):
 		var spell_panels = Globals.in_game_ui.spell_grid_container.get_children() #spells panels
 		if Globals.player_data.equipped_spells[i]:
@@ -134,11 +137,29 @@ func load_spells():
 			var texture_rect = TextureRect.new()
 			texture_rect.texture = Globals.item_resources.master_spell_book["fire_ball"].item_graphic.texture
 			texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			texture_rect.z_index = -1
 			spell_panels[i].add_child(texture_rect)
 			spell_equip_index+=1
 
 func equip_inv_item(item_metadata: Wearable_Item):
 	add_item_to_equipment_panel(item_metadata)
+	add_item_to_player_body(item_metadata)
+
+func add_item_to_player_body(item_meta: Wearable_Item):
+	var item_to_equip
+	if item_meta.item_type == item_meta.ITEM_TYPE.SWORD and not weapon_sprite:
+		weapon_sprite = item_meta.weapon_character_sprite
+		weapon_sprite.position = player_animated_sprite_2d.position
+		weapon_sprite.z_index = 2
+		weapon_sprite.animation_finished.connect(_on_wep_animation_finished)
+		add_child(weapon_sprite)
+		item_to_equip = Globals.item_resources.master_weapon_book[item_meta.item_id]
+
+	if item_meta.item_type == Wearable_Item.ITEM_TYPE.SPELL:
+		item_to_equip = Globals.item_resources.master_spell_book[item_meta.item_id]
+
+	else:
+		item_to_equip = Globals.item_resources.master_weapon_book[item_meta.item_id]
 
 func append_to_spells(value):
 	Globals.player_data.equipped_spells[spell_equip_index] = value
@@ -146,13 +167,7 @@ func append_to_spells(value):
 	load_spells()
 
 func add_item_to_equipment_panel(item_meta: Wearable_Item):
-	var item_to_equip
-	if item_meta.item_type == Wearable_Item.ITEM_TYPE.SPELL:
-		item_to_equip = Globals.item_resources.master_spell_book[item_meta.item_id]
-	elif item_meta.item_type == Wearable_Item.ITEM_TYPE.MELEE:
-		item_to_equip = Globals.item_resources.master_weapon_book[item_meta.item_id]
-	else:
-		item_to_equip = Globals.item_resources.master_weapon_book[item_meta.item_id]
+
 	var texture_rect = TextureRect.new()
 	texture_rect.texture = item_meta.item_graphic.texture
 	texture_rect.stretch_mode = TextureRect.STRETCH_SCALE
@@ -187,15 +202,29 @@ func handle_spell():
 		Direction.RIGHT:
 			player_animated_sprite_2d.play("man_cast_right")
 
+
+func _on_wep_animation_finished():
+	weapon_sprite.visible = false
+	
 func handle_attack():
+	weapon_sprite.visible = true
+
 	match move_dir:
 		Direction.UP:
+			if(weapon_sprite):
+				weapon_sprite.play("up")
 			player_animated_sprite_2d.play("man_attack_up")
 		Direction.DOWN:
+			if(weapon_sprite):
+				weapon_sprite.play("down")
 			player_animated_sprite_2d.play("man_attack_down")
 		Direction.LEFT:
+			if(weapon_sprite):
+				weapon_sprite.play("left")
 			player_animated_sprite_2d.play("man_attack_left")
 		Direction.RIGHT:
+			if(weapon_sprite):
+				weapon_sprite.play("right")
 			player_animated_sprite_2d.play("man_attack_right")
 
 func is_animating():
@@ -229,14 +258,15 @@ func set_animation():
 	if is_animating_spell:
 		handle_spell()
 		return
-	if is_animating_attack:
+	if is_animating_attack and weapon_sprite:
+		
 		handle_attack()
 		return
 		
 	var mouse_position = get_global_mouse_position()
 	var direction = (mouse_position - global_position).normalized()
 	
-	# Calculate the angle in degrees
+	# calculate the angle in degrees
 	var angle = rad_to_deg(direction.angle())
 	if not is_animating():
 		if Input.is_action_pressed("move_left") or Input.is_action_pressed("move_right") or Input.is_action_pressed("move_up") or Input.is_action_pressed("move_down"):
@@ -250,7 +280,7 @@ func set_animation():
 				Direction.DOWN:
 					player_animated_sprite_2d.play("man_walk_down")
 		else:
-			# Play idle animation based on move_dir
+			# play idle animation based on move_dir
 			match move_dir:
 				Direction.RIGHT:
 					player_animated_sprite_2d.play("man_idle_right")
@@ -290,6 +320,8 @@ func _process(delta):
 	
 	var direction_local = direction.rotated(-rotation)
 	aim_angle = rad_to_deg(direction_local.angle())
+	
+	
 	
 	if aim_angle >= -45 and aim_angle < 45:
 		move_dir = Direction.RIGHT  # Right

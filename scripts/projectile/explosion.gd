@@ -1,18 +1,13 @@
 extends Node2D
 
-# Knockback strength
 @export var knockback_strength: float = 500.0
-
-# Explosion radius
+@export var max_explosion_radius: float = 100.0
 @export var explosion_radius: float = 100.0
 
-# Timer duration (how long the explosion lasts)
 @export var explosion_duration: float = 0.5
 
-# Reference to the Timer
 var timer: Timer
 
-# Reference to the Area2D
 var area: Area2D
 
 var sprite_path
@@ -23,6 +18,7 @@ var explosion_position
 var animated_sprite_sheet
 var is_looping
 var pos
+var tween: Tween
 
 func _ready():
 	animated_sprite_sheet = AnimationUtils.load_spritesheet(sprite_path, frame_size, frame_count, animation_name, pos, is_looping)
@@ -44,18 +40,24 @@ func _ready():
 	area.call_deferred("add_child", collision_shape) 
 	area.connect("body_entered", _on_Area2D_body_entered)
 
+	var tween = create_tween()
+	tween.tween_property(circle_shape, "radius", max_explosion_radius, explosion_duration)
+	#tween.finished.connect(_on_explosion_finished)
 	
 func _on_animation_finished():
 	queue_free()
 
 func _on_Area2D_body_entered(body):
-	# Check if the body is in the "enemies" group (or any other group you want to apply knockback to)
 	if body.is_in_group("enemies"):
 		apply_knockback(body)
 
 func apply_knockback(body):
-	var distance = body.global_position.distance_to(global_position)
-	var strength = knockback_strength * (40.0 - distance / explosion_radius)
-	var direction = (body.global_position - global_position).normalized()
+	# Find direction FROM explosion TO enemy
+	var direction = (body.position - pos).normalized()
+	
+	# Knockback force is in the OPPOSITE direction
+	var knockback_force = -direction * knockback_strength
+	
+	# Apply force if the body has a knockback method
 	if body.has_method("apply_knockback"):
-		body.apply_knockback(direction * strength)
+		body.apply_knockback(knockback_force)
