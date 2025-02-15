@@ -19,10 +19,13 @@ func _ready():
 
 func _on_inventory_item_list_item_clicked(index: int, at_position: Vector2, mouse_button_index: int) -> void:
 	if mouse_button_index == MOUSE_BUTTON_RIGHT:
-		selected_item_index = index  # Store the clicked item index
-		context_menu.position = get_global_mouse_position()
+		selected_item_index = index
+		
+		var mouse_global_position = get_viewport().get_mouse_position()
+		
+		context_menu.position = mouse_global_position
 		context_menu.popup()
-
+		
 func _on_menu_id_pressed(id: int):
 	if selected_item_index == -1 or selected_item_index >= item_count:
 		return

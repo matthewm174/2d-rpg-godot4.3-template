@@ -6,7 +6,8 @@
 [ext_resource type="Texture2D" uid="uid://b4fvdv27sww0k" path="res://sprites/human/body/walk_animation.png" id="4_dh7ji"]
 [ext_resource type="Script" path="res://player_animation_triggers.gd" id="5_vn3hn"]
 [ext_resource type="PackedScene" uid="uid://dglqw5flk22gi" path="res://ui/ingame_ui.tscn" id="6_4ke5a"]
-[ext_resource type="Shader" path="res://shaders/camera_1.gdshader" id="7_tfk7e"]
+[ext_resource type="Shader" path="res://shaders/secLvl.gdshader" id="7_84xek"]
+[ext_resource type="Texture2D" uid="uid://jfutwk1gs1yp" path="res://sprites/misc/secLvlMask.png" id="8_lf7fp"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_4r6eg"]
 atlas = ExtResource("2_l5mdm")
@@ -754,26 +755,14 @@ _data = {
 "new_animation": SubResource("Animation_1756j")
 }
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_a6hgw"]
-shader = ExtResource("7_tfk7e")
-shader_parameter/resolution = Vector2(320, 180)
-shader_parameter/scan_line_amount = 0.1
-shader_parameter/warp_amount = 0.1
-shader_parameter/noise_amount = 0.02
-shader_parameter/interference_amount = 0.2
-shader_parameter/grille_amount = 0.1
-shader_parameter/grille_size = 1.0
-shader_parameter/vignette_amount = 0.3
-shader_parameter/vignette_intensity = 0.2
-shader_parameter/aberation_amount = 0.2
-shader_parameter/roll_line_amount = 0.01
-shader_parameter/roll_speed = -1.0
-shader_parameter/scan_line_strength = -1.0
-shader_parameter/pixel_strength = 0.0
-
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_eh2ag"]
-width = 2000
-height = 2000
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_8lf8s"]
+shader = ExtResource("7_84xek")
+shader_parameter/center = Vector2(0.5, 0.5)
+shader_parameter/radius = 0.01
+shader_parameter/feather = 0.5
+shader_parameter/distortion_strength = 0.03
+shader_parameter/blur_radius = 1.0
+shader_parameter/time_speed = 1.0
 
 [node name="Player" type="Node2D"]
 
@@ -809,8 +798,10 @@ offset_top = -324.0
 offset_right = -575.0
 offset_bottom = -324.0
 
-[node name="Sprite2D" type="Sprite2D" parent="CharacterBody2D/Camera2D"]
-material = SubResource("ShaderMaterial_a6hgw")
-position = Vector2(1.00001, -1.00003)
-scale = Vector2(2.28516, 1.28516)
-texture = SubResource("NoiseTexture2D_eh2ag")
+[node name="XRayMask" type="Sprite2D" parent="CharacterBody2D/Camera2D"]
+z_index = 2
+z_as_relative = false
+material = SubResource("ShaderMaterial_8lf8s")
+position = Vector2(0.35, 0)
+scale = Vector2(5.14, 5.14)
+texture = ExtResource("8_lf7fp")

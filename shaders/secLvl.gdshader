@@ -12,7 +12,7 @@ uniform float time_speed = 1.0;  // Speed of morphing
 void vertex() {
     float dist = length(VERTEX.xy);
 
-    float noise = sin(VERTEX.x * 10.0 + TIME * time_speed) * 
+    float noise = sin(VERTEX.x * 10.0 + TIME * time_speed) *
                   cos(VERTEX.y * 15.0 - TIME * time_speed);
 
 
