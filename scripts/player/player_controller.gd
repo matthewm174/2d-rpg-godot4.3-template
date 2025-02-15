@@ -3,13 +3,13 @@ class_name PlayerCharacterBody2d
 @onready var player_animated_sprite_2d: AnimatedSprite2D = $PlayerAnimatedSprite2d
 @onready var anim_lock_timer: Timer = $Timer
 const Projectile = preload("res://scripts/projectile/Projectile.tscn")
-@export var speed = 100
+#@export var speed = 100
 var player_inventory: Inventory
 var player_data_resource: PlayerDataResource
 @onready var character_body_2d: CharacterBody2D = $"."
 @onready var camera_2d: Camera2D = $Camera2D
 #const WORLD = preload("res://World.tscn")
-
+var stats: Dictionary
 
 enum Direction { RIGHT, LEFT, UP, DOWN}
 var facing_direction = Direction.DOWN
@@ -44,6 +44,9 @@ func _ready():
 		is_animating_attack = false;
 	)
 
+func load_stats():
+	for key in Globals.player_data.stats:
+		Globals.current_player.stats[key] =  Globals.player_data.stats[key]
 
 
 func load_player_data():
@@ -53,8 +56,10 @@ func load_player_data():
 		if spell.is_unlocked:
 			available_spells[spell_key] = spell
 	if Globals.player_data:
+		load_stats()
 		load_spells()
 		load_inventory()
+
 		
 func highlight_spell_selection(panel: Panel) -> void:
 	for pnl in Globals.in_game_ui.spell_grid_container.get_children():
@@ -189,6 +194,10 @@ func add_item_to_equipment_panel(item_meta: Wearable_Item):
 
 func get_input():
 	var input_direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var speed = stats["Speed"] * 20
+	
+	if Input.is_action_pressed("sprint"):
+		speed *= 1.5
 	velocity = input_direction * speed
 
 func handle_spell():
