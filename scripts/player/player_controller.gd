@@ -26,9 +26,12 @@ var current_spell: Spell
 var current_spell_panel
 var weapon_sprite: AnimatedSprite2D
 var aim_angle
-
+var can_strafe = true
 var knockback_velocity: Vector2 = Vector2.ZERO
 var is_knockback_active: bool = false     
+
+@export var strafe_duration: float = 0.1  # How long the strafe lasts (in seconds)
+@export var strafe_cooldown: float = 1.0
 
 func _init():
 	Globals.current_player = self
@@ -36,13 +39,29 @@ func _init():
 	
 
 func _ready():
-	
+
 	load_player_data()
 	anim_lock_timer.wait_time = 0.5
 	anim_lock_timer.timeout.connect(func(): 
 		is_animating_spell = false;
 		is_animating_attack = false;
 	)
+
+
+func strafe(direction: Vector2) -> void:
+	can_strafe = false
+	if direction == Vector2.ZERO:
+		return  # Don't strafe if there's no input direction
+
+	var strafe_timer = get_tree().create_timer(strafe_duration)
+	strafe_timer.timeout.connect(_on_strafe_finished)
+	
+
+
+func _on_strafe_finished() -> void:
+	can_strafe = true
+
+
 
 func load_stats():
 	for key in Globals.player_data.stats:
@@ -194,11 +213,21 @@ func add_item_to_equipment_panel(item_meta: Wearable_Item):
 
 func get_input():
 	var input_direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	var speed = stats["Speed"] * 20
+	var base_speed = stats["Speed"] * 20
+	player_animated_sprite_2d.speed_scale = 1
+	
+	
 	
 	if Input.is_action_pressed("sprint"):
-		speed *= 1.5
-	velocity = input_direction * speed
+		player_animated_sprite_2d.speed_scale = 2
+		base_speed *= 1.5
+	if Input.is_action_just_pressed("strafe") and can_strafe:
+		player_animated_sprite_2d.speed_scale = 3
+		
+		strafe(input_direction)
+	if not can_strafe:
+		base_speed *= 6.0
+	velocity = input_direction * base_speed
 
 func handle_spell():
 	match move_dir:
@@ -217,7 +246,8 @@ func _on_wep_animation_finished():
 	
 func handle_attack():
 	weapon_sprite.visible = true
-
+	weapon_sprite.speed_scale = 2
+	player_animated_sprite_2d.speed_scale = 2
 	match move_dir:
 		Direction.UP:
 			if(weapon_sprite):
@@ -235,6 +265,7 @@ func handle_attack():
 			if(weapon_sprite):
 				weapon_sprite.play("right")
 			player_animated_sprite_2d.play("man_attack_right")
+	player_animated_sprite_2d.speed_scale = 1
 
 func is_animating():
 	# chain together animation blockers
