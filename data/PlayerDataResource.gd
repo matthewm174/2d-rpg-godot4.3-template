@@ -56,9 +56,6 @@ func get_player_data():
 		Globals.player_data.stat_points_available = 5
 		Globals.player_data.skill_points_used = 1
 		Globals.player_data.unlocked_spells = ['fire_ball']
-		#skills
-
-		#stats
 
 		Globals.player_data.equipped_spells = { 0: null, 1: null, 2: null, 3: null }
 		if testing:

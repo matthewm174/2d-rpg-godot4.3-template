@@ -3,13 +3,12 @@ class_name PlayerCharacterBody2d
 @onready var player_animated_sprite_2d: AnimatedSprite2D = $PlayerAnimatedSprite2d
 @onready var anim_lock_timer: Timer = $Timer
 const Projectile = preload("res://scripts/projectile/Projectile.tscn")
-#@export var speed = 100
 var player_inventory: Inventory
 var player_data_resource: PlayerDataResource
 @onready var character_body_2d: CharacterBody2D = $"."
 @onready var camera_2d: Camera2D = $Camera2D
-#const WORLD = preload("res://World.tscn")
 var stats: Dictionary
+@onready var speed_trail_line_2d: Line2D = $SpeedTrailLine2D
 
 enum Direction { RIGHT, LEFT, UP, DOWN}
 var facing_direction = Direction.DOWN
@@ -29,6 +28,7 @@ var aim_angle
 var can_strafe = true
 var knockback_velocity: Vector2 = Vector2.ZERO
 var is_knockback_active: bool = false     
+var skills: Dictionary
 
 @export var strafe_duration: float = 0.1  # How long the strafe lasts (in seconds)
 @export var strafe_cooldown: float = 1.0
@@ -39,7 +39,7 @@ func _init():
 	
 
 func _ready():
-
+	speed_trail_line_2d.visible=false
 	load_player_data()
 	anim_lock_timer.wait_time = 0.5
 	anim_lock_timer.timeout.connect(func(): 
@@ -50,6 +50,7 @@ func _ready():
 
 func strafe(direction: Vector2) -> void:
 	can_strafe = false
+	speed_trail_line_2d.visible=true
 	if direction == Vector2.ZERO:
 		return  # Don't strafe if there's no input direction
 
@@ -59,13 +60,18 @@ func strafe(direction: Vector2) -> void:
 
 
 func _on_strafe_finished() -> void:
+	player_animated_sprite_2d.speed_scale = 1
+	speed_trail_line_2d.visible = false
 	can_strafe = true
+	
 
 
 
-func load_stats():
+func load_stats_skills():
 	for key in Globals.player_data.stats:
 		Globals.current_player.stats[key] =  Globals.player_data.stats[key]
+	for key in Globals.player_data.skills:
+		Globals.current_player.skills[key] =  Globals.player_data.skills[key]
 
 
 func load_player_data():
@@ -75,7 +81,7 @@ func load_player_data():
 		if spell.is_unlocked:
 			available_spells[spell_key] = spell
 	if Globals.player_data:
-		load_stats()
+		load_stats_skills()
 		load_spells()
 		load_inventory()
 
@@ -123,7 +129,7 @@ func create_projectile_for_current_spell():
 	projectile.speed = current_spell.spell_speed
 	projectile.explosion_duration = current_spell.explosion_dur
 	projectile.explosion_radius = current_spell.explosion_radius
-	projectile.damage = current_spell.spell_damage
+	projectile.damage = current_spell.spell_damage + stats["Magic"] * 0.2 + skills["Wizardry"] * 2
 	projectile.explosion_sprite_path = current_spell.explode_animation
 	projectile.animation_name="missle"
 	projectile.distance = current_spell.spell_range
@@ -214,18 +220,15 @@ func add_item_to_equipment_panel(item_meta: Wearable_Item):
 func get_input():
 	var input_direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	var base_speed = stats["Speed"] * 20
-	player_animated_sprite_2d.speed_scale = 1
-	
-	
-	
 	if Input.is_action_pressed("sprint"):
 		player_animated_sprite_2d.speed_scale = 2
 		base_speed *= 1.5
-	if Input.is_action_just_pressed("strafe") and can_strafe:
-		player_animated_sprite_2d.speed_scale = 3
-		
+	elif Input.is_action_just_released("sprint"):
+		player_animated_sprite_2d.speed_scale = 1
+	if Input.is_action_just_pressed("strafe") and can_strafe and velocity.length() > 0:
 		strafe(input_direction)
 	if not can_strafe:
+		player_animated_sprite_2d.speed_scale = 3
 		base_speed *= 6.0
 	velocity = input_direction * base_speed
 
@@ -246,8 +249,9 @@ func _on_wep_animation_finished():
 	
 func handle_attack():
 	weapon_sprite.visible = true
-	weapon_sprite.speed_scale = 2
-	player_animated_sprite_2d.speed_scale = 2
+	
+	#weapon_sprite.speed_scale = 2
+	#player_animated_sprite_2d.speed_scale = 2
 	match move_dir:
 		Direction.UP:
 			if(weapon_sprite):
@@ -360,9 +364,7 @@ func _process(delta):
 	
 	var direction_local = direction.rotated(-rotation)
 	aim_angle = rad_to_deg(direction_local.angle())
-	
-	
-	
+
 	if aim_angle >= -45 and aim_angle < 45:
 		move_dir = Direction.RIGHT  # Right
 	elif aim_angle >= 45 and aim_angle < 135:

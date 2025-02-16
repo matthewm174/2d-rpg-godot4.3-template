@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://dglqw5flk22gi" path="res://ui/ingame_ui.tscn" id="6_4ke5a"]
 [ext_resource type="Shader" path="res://shaders/secLvl.gdshader" id="7_84xek"]
 [ext_resource type="Texture2D" uid="uid://jfutwk1gs1yp" path="res://sprites/misc/secLvlMask.png" id="8_lf7fp"]
+[ext_resource type="PackedScene" uid="uid://d0qp7st4mhl2g" path="res://speed_trail_line_2d.tscn" id="9_i54jv"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_4r6eg"]
 atlas = ExtResource("2_l5mdm")
@@ -739,14 +740,6 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_0g3u7"]
 size = Vector2(70, 75)
 
-[sub_resource type="SpriteFrames" id="SpriteFrames_7ko1s"]
-animations = [{
-"frames": [],
-"loop": true,
-"name": &"new_animation",
-"speed": 5.0
-}]
-
 [sub_resource type="Animation" id="Animation_1756j"]
 resource_name = "new_animation"
 
@@ -779,10 +772,6 @@ shape = SubResource("RectangleShape2D_0g3u7")
 
 [node name="Timer" type="Timer" parent="CharacterBody2D"]
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CharacterBody2D"]
-sprite_frames = SubResource("SpriteFrames_7ko1s")
-animation = &"new_animation"
-
 [node name="AnimationPlayer" type="AnimationPlayer" parent="CharacterBody2D"]
 libraries = {
 "": SubResource("AnimationLibrary_r1wwp")
@@ -805,3 +794,5 @@ material = SubResource("ShaderMaterial_8lf8s")
 position = Vector2(0.35, 0)
 scale = Vector2(5.14, 5.14)
 texture = ExtResource("8_lf7fp")
+
+[node name="SpeedTrailLine2D" parent="CharacterBody2D" instance=ExtResource("9_i54jv")]

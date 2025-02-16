@@ -63,7 +63,7 @@ func _init():
 	#graphic, spname, itmtype: Wearable_Item.ITEM_TYPE,
 	#equiploc: Wearable_Item.WEARABLE_LOCATION, 
 	#itemid: String, spell_anim: String, explode_anim: String
-	var sp_fire_ball: Spell = Spell.new(4.0, 30.0, 80.0, Spell.SPELL_TYPES.FIRE, 5.0, 200.0, 1.0, 2.0, 
+	var sp_fire_ball: Spell = Spell.new(1.0, 30.0, 180.0, Spell.SPELL_TYPES.FIRE, 5.0, 200.0, 1.0, 2.0, 
 	true, load_sprite_with_texture("res://sprites/inventory/spells/fire_ball_inventory.png"), 
 	"Fire Ball", Wearable_Item.ITEM_TYPE.SPELL, Wearable_Item.WEARABLE_LOCATION.Spells, 
 	"fire_ball", "res://sprites/spells/fireball_0.png", "res://sprites/explosions/explosion_dummy.png")
