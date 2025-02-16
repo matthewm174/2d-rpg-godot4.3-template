@@ -2,7 +2,8 @@ extends CharacterBody2D
 class_name PlayerCharacterBody2d
 @onready var player_animated_sprite_2d: AnimatedSprite2D = $PlayerAnimatedSprite2d
 @onready var anim_lock_timer: Timer = $Timer
-const Projectile = preload("res://scripts/projectile/Projectile.tscn")
+const ProjectileSpell = preload("res://scripts/projectile/Projectile.tscn")
+const TargetSpell = preload("res://scripts/target_spell/TargetSpell.tscn")
 var player_inventory: Inventory
 var player_data_resource: PlayerDataResource
 @onready var character_body_2d: CharacterBody2D = $"."
@@ -121,26 +122,42 @@ func create_projectile_for_current_spell():
 	# Get the direction to the mouse
 	var mouse_position = get_global_mouse_position()
 	var direction = (mouse_position - position).normalized()
-	
-	# Spawn the projectile at the player's position
-	var projectile = Projectile.instantiate()
-	projectile.direction = direction
-	print(direction)
-	projectile.speed = current_spell.spell_speed
-	projectile.explosion_duration = current_spell.explosion_dur
-	projectile.explosion_radius = current_spell.explosion_radius
-	projectile.damage = current_spell.spell_damage + stats["Magic"] * 0.2 + skills["Wizardry"] * 2
-	projectile.explosion_sprite_path = current_spell.explode_animation
-	projectile.animation_name="missle"
-	projectile.distance = current_spell.spell_range
-	projectile.frame_count=7
-
-	projectile.sprite_path=current_spell.spell_animation
-	projectile.frame_size = Vector2i(64,64)
-	projectile.position = position
-	var computed_angle = rad_to_deg(direction.angle()) + 180.0
-	projectile.rotation_degrees = fposmod(computed_angle, 360.0)
-	get_tree().current_scene.add_child(projectile)
+	if current_spell.spell_type == Spell.CAST_TYPES.PROJECTILE:
+		# Spawn the projectile at the player's position
+		var projectile = ProjectileSpell.instantiate()
+		projectile.direction = direction
+		print(direction)
+		projectile.speed = current_spell.spell_speed
+		projectile.explosion_duration = current_spell.explosion_dur
+		projectile.explosion_radius = current_spell.explosion_radius
+		projectile.damage = current_spell.spell_damage + stats["Magic"] * 0.2 + skills["Wizardry"] * 2
+		projectile.explosion_sprite_path = current_spell.explode_animation
+		projectile.animation_name="missle"
+		projectile.distance = current_spell.spell_range
+		projectile.frame_count=7
+		projectile.explodes = current_spell.explodes
+		projectile.sprite_path=current_spell.spell_animation
+		projectile.frame_size = Vector2i(64,64)
+		projectile.position = position
+		var computed_angle = rad_to_deg(direction.angle()) + 180.0
+		projectile.rotation_degrees = fposmod(computed_angle, 360.0)
+		get_tree().current_scene.add_child(projectile)
+	if current_spell.spell_type == Spell.CAST_TYPES.TARGET:
+		var target_spell = TargetSpell.instantiate()
+		target_spell.damage = current_spell.spell_damage
+		target_spell.animation_name = "missle"
+		target_spell.frame_size = Vector2i(64,64)
+		target_spell.sprite_path = current_spell.spell_animation
+		target_spell.frame_count=7
+		target_spell.position = mouse_position
+		target_spell.explosion_duration = current_spell.explosion_dur
+		target_spell.explosion_radius = current_spell.explosion_radius
+		target_spell.initial_position = mouse_position
+		target_spell.explosion_sprite_path = current_spell.explode_animation
+		target_spell.explodes = current_spell.explodes
+		target_spell.target_effects = current_spell.target_effects
+		get_tree().current_scene.add_child(target_spell)
+		
 
 	
 func load_inventory():
@@ -156,16 +173,8 @@ func load_spells():
 	for i in range(max_equippable_spells):
 		var spell_panels = Globals.in_game_ui.spell_grid_container.get_children() #spells panels
 		if Globals.player_data.equipped_spells[i]:
-			print(Globals.player_data.equipped_spells[i].spell_type)
-			print(Globals.player_data.equipped_spells[i].spell_range)
-			print(Globals.player_data.equipped_spells[i].spell_magnitude)
-			print(Globals.player_data.equipped_spells[i].spell_cast_time)
-			print(Globals.player_data.equipped_spells[i].is_unlocked)
-			print(Globals.player_data.equipped_spells[i].item_uniqueness)
-			print(Globals.player_data.equipped_spells[i].item_graphic)
-			print(spell_panels[i])
 			var texture_rect = TextureRect.new()
-			texture_rect.texture = Globals.item_resources.master_spell_book["fire_ball"].item_graphic.texture
+			texture_rect.texture = Globals.player_data.equipped_spells[i].item_graphic.texture
 			texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			texture_rect.z_index = -1
 			spell_panels[i].add_child(texture_rect)

@@ -1,7 +1,7 @@
 extends Wearable_Item
 class_name Spell
 
-var spell_type: SPELL_TYPES
+var spell_type: CAST_TYPES
 var spell_damage: int
 var spell_range: float
 var spell_cast_time: float
@@ -13,13 +13,30 @@ var explosion
 var is_unlocked: bool
 var explosion_radius
 var explosion_dur
+var explodes
 
-enum SPELL_TYPES {
-	WATER = 0, FIRE = 1, EARTH = 2, AIR = 3
+var target_effects: Array[TARGET_EFFECT]
+
+#explains what the spell does when cast
+enum CAST_TYPES {
+	PROJECTILE = 0, TEMPORAL = 1, SELF = 2, TARGET = 3
+}
+
+#defines how to handle effects on collision
+enum TARGET_EFFECT {
+	EXPLOSION = 0,
+	TELEPORT = 1,
+	MATERIALIZE = 2,
+	NOVA = 3,
+	GRAVITY = 4,
+	SUMMONING = 5,
+	LINKING = 7,
+	TIME = 8
 }
 
 
-func _init(explode_dur, explode_rad, speed, stype, sdmg, srng, sct, smag, iu, graphic, spname, itmtype: Wearable_Item.ITEM_TYPE, equiploc: Wearable_Item.WEARABLE_LOCATION, itemid: String, spell_anim: String, explode_anim: String):
+func _init(explode_dur, explode_rad, speed, stype, sdmg, srng, sct, smag, iu, graphic, spname, 
+itmtype: Wearable_Item.ITEM_TYPE, equiploc: Wearable_Item.WEARABLE_LOCATION, itemid: String, spell_anim: String, explode_anim: String, make_explode: bool, target_fx: Array[TARGET_EFFECT]):
 	spell_type = stype
 	spell_damage = sdmg
 	spell_range = srng
@@ -37,3 +54,5 @@ func _init(explode_dur, explode_rad, speed, stype, sdmg, srng, sct, smag, iu, gr
 	item_name = spname
 	item_equip_location = equiploc
 	item_id = itemid
+	explodes = make_explode
+	target_effects = target_fx

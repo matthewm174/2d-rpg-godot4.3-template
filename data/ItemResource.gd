@@ -63,8 +63,46 @@ func _init():
 	#graphic, spname, itmtype: Wearable_Item.ITEM_TYPE,
 	#equiploc: Wearable_Item.WEARABLE_LOCATION, 
 	#itemid: String, spell_anim: String, explode_anim: String
-	var sp_fire_ball: Spell = Spell.new(1.0, 30.0, 180.0, Spell.SPELL_TYPES.FIRE, 5.0, 200.0, 1.0, 2.0, 
-	true, load_sprite_with_texture("res://sprites/inventory/spells/fire_ball_inventory.png"), 
-	"Fire Ball", Wearable_Item.ITEM_TYPE.SPELL, Wearable_Item.WEARABLE_LOCATION.Spells, 
-	"fire_ball", "res://sprites/spells/fireball_0.png", "res://sprites/explosions/explosion_dummy.png")
+	var sp_fire_ball: Spell = Spell.new(
+		1.0, 
+		30.0, 
+		180.0, 
+		Spell.CAST_TYPES.PROJECTILE,
+		5.0, 
+		200.0, 
+		1.0, 
+		2.0, 
+	true, 
+	load_sprite_with_texture("res://sprites/inventory/spells/fire_ball_inventory.png"), 
+	"Fire Ball",
+	 Wearable_Item.ITEM_TYPE.SPELL, 
+	Wearable_Item.WEARABLE_LOCATION.Spells, 
+	"fire_ball", 
+	"res://sprites/spells/fireball_0.png", 
+	"res://sprites/explosions/explosion_dummy.png", 
+	true, 
+	[Spell.TARGET_EFFECT.EXPLOSION]
+	)
 	master_spell_book["fire_ball"] = sp_fire_ball
+	
+	var sp_teleport: Spell = Spell.new(
+		0.0, #explode dur
+		0.0, #explode Radius
+		1000.0, #Speed
+		Spell.CAST_TYPES.TARGET, #Casting Type
+		0.0, #base damage
+		9999.0, #range
+		0.3, #cast time
+		0.0, #Magnitude (unused...)
+		true, #unlocked
+		load_sprite_with_texture("res://sprites/inventory/spells/teleport_inventory.png"), #Inventory display
+		"Teleport", # Proper name
+		Wearable_Item.ITEM_TYPE.SPELL, # For validation
+		Wearable_Item.WEARABLE_LOCATION.Spells, #For validation
+		"teleport", #lookup name (ID)
+		"res://sprites/spells/icicle_0.png", # Sprite Sheet for animation
+		"", #explosion sprites
+		false,
+		[Spell.TARGET_EFFECT.TELEPORT] #effects
+		) #if it explodes, will probably refactor this
+	master_spell_book["teleport"] = sp_teleport

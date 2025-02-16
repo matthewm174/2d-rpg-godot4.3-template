@@ -12,6 +12,4 @@ func _on_frame_changed():
 	cast_regex.compile("^man_cast")  # Regex pattern for "starts with man_cast"
 	
 	if cast_regex.search(animation) and frame == 3:
-		Globals.current_player.create_projectile_for_current_spell()	
-	#if animation == "spell_cast" and frame == 3:  # Adjust frame number
-		#Globals.current_player.create_projectile_for_current_spell()
+		Globals.current_player.create_projectile_for_current_spell()
