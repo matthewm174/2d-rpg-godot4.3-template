@@ -8,7 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://dglqw5flk22gi" path="res://ui/ingame_ui.tscn" id="6_4ke5a"]
 [ext_resource type="Shader" path="res://shaders/secLvl.gdshader" id="7_84xek"]
 [ext_resource type="Texture2D" uid="uid://jfutwk1gs1yp" path="res://sprites/misc/secLvlMask.png" id="8_lf7fp"]
-[ext_resource type="PackedScene" uid="uid://d0qp7st4mhl2g" path="res://speed_trail_line_2d.tscn" id="9_i54jv"]
+[ext_resource type="PackedScene" uid="uid://d0qp7st4mhl2g" path="res://scripts/game_fx/speed_trail_line_2d.tscn" id="9_i54jv"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_4r6eg"]
 atlas = ExtResource("2_l5mdm")

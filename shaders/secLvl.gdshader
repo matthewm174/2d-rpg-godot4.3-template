@@ -1,13 +1,13 @@
 shader_type canvas_item;
 
 uniform sampler2D screen_texture : hint_screen_texture;
-uniform sampler2D mask_texture; // Mask texture for foggy/blurred edges
-uniform vec2 center = vec2(0.5, 0.5);  // Center of effect (normalized)
-uniform float radius = 0.1;            // Base effect size
-uniform float feather = 0.3;           // Soft fade at edges
-uniform float distortion_strength = 0.03; // Controls how much the edges morph
-uniform float blur_radius : hint_range(0.0, 1.0) = 1; // Blur radius for the edges
-uniform float time_speed = 1.0;  // Speed of morphing
+uniform sampler2D mask_texture;
+uniform vec2 center = vec2(0.5, 0.5); 
+uniform float radius = 0.1;
+uniform float feather = 0.3;
+uniform float distortion_strength = 0.03;
+uniform float blur_radius : hint_range(0.0, 1.0) = 1;
+uniform float time_speed = 1.0;
 
 void vertex() {
     float dist = length(VERTEX.xy);

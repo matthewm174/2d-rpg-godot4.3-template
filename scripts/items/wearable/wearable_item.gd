@@ -1,6 +1,6 @@
 extends Inventory_Slot
 class_name Wearable_Item 
-
+var description
 # this class defines anything that can be in an inventory and equipped
 enum UNIQUENESS {
 	COMMON,
@@ -17,6 +17,7 @@ enum WEARABLE_LOCATION {
 	Feet = 5,
 	Spells = 6,
 }
+
 enum ITEM_TYPE {
 	SPELL,
 	SWORD,

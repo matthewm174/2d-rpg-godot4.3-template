@@ -80,17 +80,16 @@ func hide_inventory():
 	player_ui.visible = false
 
 func _on_inventory_item_list_item_selected(index: int) -> void:
-	update_description_panel()
+	var item = inventory_item_list.get_item_metadata(index)
+	if not item:
+		print('ITEM DOESNT HAVE METADATA, SOMETHING IS WRONG.')
+		return
+	update_description_panel(item)
 
-func update_description_panel():
-	## dummy code, delete
-	var image := Image.create(30, 30, false, Image.FORMAT_RGBA8)
-	image.fill(Color.ALICE_BLUE)
-	var texture := ImageTexture.create_from_image(image)
-	##
+func update_description_panel(item):
+	description.text = item.description
+	item_image.texture = item.item_graphic
 	
-	description.text = "test description1232123"
-	item_image.texture = texture
 	
 func _on_main_menu_item_list_item_selected(index: int) -> void:
 	print("Selected Item Index:", index)

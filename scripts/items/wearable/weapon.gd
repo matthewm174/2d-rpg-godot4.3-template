@@ -3,7 +3,7 @@ class_name Weapon
 var damage_type
 var damage
 var is_ranged
-var description
+
 enum DAMAGE_TYPES {
 	SLASH, PIERCE, BLUNT
 }
