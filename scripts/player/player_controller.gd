@@ -49,6 +49,7 @@ func _ready():
 	)
 
 
+
 func strafe(direction: Vector2) -> void:
 	can_strafe = false
 	speed_trail_line_2d.visible=true
@@ -373,6 +374,8 @@ func _process(delta):
 	
 	var direction_local = direction.rotated(-rotation)
 	aim_angle = rad_to_deg(direction_local.angle())
+	
+	
 
 	if aim_angle >= -45 and aim_angle < 45:
 		move_dir = Direction.RIGHT  # Right

@@ -21,6 +21,7 @@ var pos
 var tween: Tween
 
 func _ready():
+	
 	animated_sprite_sheet = AnimationUtils.load_spritesheet(sprite_path, frame_size, frame_count, animation_name, pos, is_looping)
 	add_child(animated_sprite_sheet)
 	
@@ -42,7 +43,6 @@ func _ready():
 
 	var tween = create_tween()
 	tween.tween_property(circle_shape, "radius", max_explosion_radius, explosion_duration)
-	#tween.finished.connect(_on_explosion_finished)
 	
 func _on_animation_finished():
 	queue_free()
@@ -52,12 +52,9 @@ func _on_Area2D_body_entered(body):
 		apply_knockback(body)
 
 func apply_knockback(body):
-	# Find direction FROM explosion TO enemy
 	var direction = (body.position - pos).normalized()
 	
-	# Knockback force is in the OPPOSITE direction
 	var knockback_force = -direction * knockback_strength
 	
-	# Apply force if the body has a knockback method
 	if body.has_method("apply_knockback"):
 		body.apply_knockback(knockback_force)

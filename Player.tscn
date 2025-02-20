@@ -759,7 +759,7 @@ shader_parameter/time_speed = 1.0
 
 [node name="Player" type="Node2D"]
 
-[node name="CharacterBody2D" type="CharacterBody2D" parent="."]
+[node name="CharacterBody2D" type="CharacterBody2D" parent="." groups=["player"]]
 script = ExtResource("1_gxfhm")
 
 [node name="PlayerAnimatedSprite2d" type="AnimatedSprite2D" parent="CharacterBody2D"]

@@ -1,28 +1,41 @@
 extends CharacterBody2D
 class_name Enemy
 
-#var enemy_timer: Timer = $"../enemyTimer"
 var enemy_animated_sprite_2d
 enum Direction { RIGHT, LEFT, UP, DOWN }
 var is_animating_spell = false
 var is_animating_attack = false
 var impulse = Vector2.ZERO
 func is_animating():
-	# chain together animation blockers	
 	return is_animating_spell || is_animating_attack
 var knockback_velocity = Vector2()
-
-@export var health = 10
+var hb_collision
+var hitbox
+@onready var agent = NavigationAgent2D.new()
+@export var tilemap: TileMapLayer
+@onready var path_change_timer = Timer.new()
+@export var health := 10
 @export var speed := 50
 @export var patrol_points: Array[Vector2]
-var isDead = false
+@export var vision_radius: float = 300.0
+@export var attack_range: float = 100.0
+@export var cast_range: float = 400.0
+@export var attack_cooldown: float = 2.0
+@export var spell_cooldown: float = 3.0
+var debug_path: PackedVector2Array = []
 var current_target = 0
-var caster
-var is_knockback_active
-var enemy_col = CollisionShape2D.new()
-var target_position
-var direction
-var vision_radius
+var caster = false
+var is_knockback_active = false
+var target_position: Vector2
+var direction: Vector2
+var player_ref: CharacterBody2D = null
+var player_in_range: bool = false
+var can_attack: bool = true
+var can_cast: bool = true
+var is_dead: bool = false
+var facing = "up"
+var last_player_position: Vector2 = Vector2.ZERO  # <-- ADD THIS
+var enemy_area
 func _init(hp: float, spd: float, pat_points: Array[Vector2], animations: AnimatedSprite2D, spells: Array[Spell], weapon: Wearable_Item):
 	health = hp
 	speed = spd
@@ -32,45 +45,156 @@ func _init(hp: float, spd: float, pat_points: Array[Vector2], animations: Animat
 	enemy_animated_sprite_2d = animations
 	add_child(enemy_animated_sprite_2d)
 	enemy_animated_sprite_2d.animation_finished.connect(_on_animation_finished)
+	
+	hitbox = Area2D.new()
+	var hb_shape = RectangleShape2D.new()
+	var base_size = enemy_animated_sprite_2d.get_sprite_frames().get_frame_texture("walk_up", 0).get_size()
+	#hitbox = base_size - base_size/3
+	hb_collision = CollisionShape2D.new()
+	hb_shape.size = base_size - base_size/3
+	hb_collision.shape = hb_shape
+	hb_collision
+	hitbox.add_child(hb_collision)
+	add_child(hitbox)
+	
+	enemy_area = CollisionShape2D.new()
+	enemy_area.add_to_group("enemies")
+	enemy_area.disabled = false
+	enemy_area.shape = hb_shape
+	
+	add_child(enemy_area)
+	
 
 func _process(delta: float) -> void:
-	if health <= 0 and not isDead:
+	if agent.is_navigation_finished():
+		return
+
+	var desired_velocity = (agent.get_next_path_position() - global_position).normalized() * 100
+	agent.set_velocity(desired_velocity)
+	if health <= 0 and not is_dead:
 		play_death()
+
+
 
 func kill_enemy():
 	enemy_animated_sprite_2d.queue_free()
-	enemy_col.queue_free()
 	queue_free()
 
 func play_death():
-	if not isDead:
-		isDead = true
+	if not is_dead:
+		is_dead = true
 		enemy_animated_sprite_2d.play("death")
 
+func _on_body_entered(body: Node):
+	print(body.get_groups())
+	if body is CharacterBody2D and body.is_in_group("player"):
+		player_in_range = true
+		player_ref = body
+
+func _on_body_exited(body: Node):
+	print()
+	if body is CharacterBody2D and body.is_in_group("player"):
+		player_in_range = false
+		player_ref = null
+
+
+
 func _on_animation_finished():
-	if enemy_animated_sprite_2d.animation == "death":  # Check if the finished animation is "death"
+	if enemy_animated_sprite_2d.animation == "death":
 		kill_enemy()
+	var cast_regex = RegEx.new()
+	cast_regex.compile("^attack_.*")
 
+	if cast_regex.search(enemy_animated_sprite_2d.animation):
+		is_animating_attack = false
+		can_attack = true
+	
+	cast_regex.compile("^cast_.*")
+	
+	if cast_regex.search(enemy_animated_sprite_2d.animation):
+		is_animating_spell = false
+		can_cast = true
+		
 func _ready() -> void:
+	self.add_to_group("enemies")
+	var detection_area = Area2D.new()
+	var collision_shape = CollisionShape2D.new()
+	collision_shape.shape = CircleShape2D.new()
+	collision_shape.shape.radius = vision_radius
+	detection_area.add_child(collision_shape)
+	detection_area.body_entered.connect(_on_body_entered)
+	detection_area.body_exited.connect(_on_body_exited)
+	var nav_map = tilemap.get_navigation_map()
+	agent.set_navigation_map(nav_map)
+	add_child(detection_area)
+	add_child(agent)
+	setup_agent()
 
-	var col_shape = RectangleShape2D.new()
-	col_shape.size = enemy_animated_sprite_2d.get_sprite_frames().get_frame_texture("walk_up", 0).get_size()
-	enemy_col.shape = col_shape
-	add_child(enemy_col)
-	enemy_col.position = Vector2.ZERO
-	add_to_group("enemies")
+	
+func _on_velocity_computed(safe_velocity):
+	if safe_velocity.length() > 0:
+		velocity = safe_velocity
+		move_and_slide()
+
+func _on_path_changed():
+	debug_path = agent.get_current_navigation_path()
+	
+func set_new_target(pos: Vector2):
+	agent.set_target_position(pos)
+
+
+func setup_agent():
+	agent.pathfinding_algorithm = NavigationPathQueryParameters2D.PathfindingAlgorithm.PATHFINDING_ALGORITHM_ASTAR
+	agent.path_max_distance = 300.0
+	#agent.target_desired_distance = 100.0/
+	agent.path_desired_distance = 200.00
+	#if rigid_body_coll_shape_2d.shape is RectangleShape2D:
+		#var width = rigid_body_coll_shape_2d.shape.extents.x * 2
+		#var height = rigid_body_coll_shape_2d.shape.extents.y * 2
+		#var radius = min(width, height) / 2.0
+		#agent.radius = radius
+	agent.path_postprocessing = NavigationPathQueryParameters2D.PATH_POSTPROCESSING_EDGECENTERED
+	agent.debug_enabled = true
+	agent.debug_path_custom_line_width = 3.0
+	agent.avoidance_enabled = true  
+	agent.avoidance_priority = 1.0  # Higher priority means it avoids obstacles first
+	if not tilemap:
+		push_error("TileMap not found or navigation layer not set up!")
+	
+	agent.avoidance_enabled = true
+	agent.velocity_computed.connect(_on_velocity_computed)
+	agent.path_changed.connect(_on_path_changed)
+	
+
+
+func try_attack():
+	if can_attack and player_ref:
+		can_attack = false
+		is_animating_attack = true
+		enemy_animated_sprite_2d.play("attack_"+facing)
+
+
+func try_cast():
+	if caster and can_cast and player_ref:
+		can_cast = false
+		is_animating_spell = true
+		enemy_animated_sprite_2d.play("cast_"+facing)
+
 
 func set_animation_from_direction(direction: Vector2):
-	if abs(direction.x) > abs(direction.y):  # More horizontal movement
+	
+	if abs(direction.x) > abs(direction.y):
 		if direction.x > 0:
-			enemy_animated_sprite_2d.play("walk_right") # Right animation
+			facing = "right"
 		else:
-			enemy_animated_sprite_2d.play("walk_left") # Left animation
-	else:  # More vertical movement
+			facing = "left"
+	else:
 		if direction.y > 0:
-			enemy_animated_sprite_2d.play("walk_down") # Down animation
+			facing = "down"
 		else:
-			enemy_animated_sprite_2d.play("walk_up") # Up animation
+			facing = "up"
+			
+	enemy_animated_sprite_2d.play("walk_"+facing)
 
 func take_damage(damage):
 	health -= damage
@@ -81,27 +205,55 @@ func apply_knockback(knockback_force: Vector2):
 	is_knockback_active = true
 	
 
-func _physics_process(delta):
-	if isDead:
+func _on_path_change_timer_timeout():
+	# this should return enemy to original patrol point if no longer sees player
+	if is_dead || patrol_points.is_empty():
 		return
-	if patrol_points.is_empty():
-		return
+	current_target = (current_target + 1) % patrol_points.size()
+	target_position = patrol_points[current_target]
+	agent.target_position = target_position
+	path_change_timer.start()
 
+
+func _physics_process(delta):
+	
+	if is_dead || patrol_points.is_empty() || NavigationServer2D.map_get_iteration_id(agent.get_navigation_map()) == 0:
+		return
 
 	if is_knockback_active:
 		velocity = knockback_velocity
 		knockback_velocity = knockback_velocity.lerp(Vector2.ZERO, 100.0 * delta)
 		move_and_slide()
-		# End knockback when velocity is near zero
 		if knockback_velocity.length() < 1.0:
 			is_knockback_active = false
-		return  # Exit early to skip patrol logic
-	else:
-		target_position = patrol_points[current_target]
-		direction = (target_position - global_position).normalized()
-		velocity = direction * speed
+		return
+	#print(position)
+	#print(global_position)
+	#print(Globals.current_player.position)
+	#print(Globals.current_player.global_position)
+	#print(Globals.current_player.character_body_2d.position)
+	#print(Globals.current_player.character_body_2d.global_position)
+	var target_pos = Globals.current_player.character_body_2d.global_position
+	if player_in_range and target_pos:
+		var distance = global_position.distance_to(target_pos)
+		if target_pos.distance_to(last_player_position) > 5.0:
+			agent.target_position = target_pos
+			last_player_position = target_pos
+		
+		if distance <= attack_range:
+			try_attack()
+			velocity = Vector2.ZERO
+		elif caster and distance <= cast_range:
+			try_cast()
+			velocity = Vector2.ZERO
+
+
+	if agent.is_navigation_finished():
+		return
+
+	var next_path_pos = agent.get_next_path_position()
+	direction = (next_path_pos - global_position).normalized()
+
+	if not is_animating():
 		move_and_slide()
 		set_animation_from_direction(direction)
-	# Switch to next point when close
-		if global_position.distance_to(target_position) < 5:
-			current_target = (current_target + 1) % patrol_points.size()

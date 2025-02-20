@@ -86,6 +86,7 @@ static func load_character_animation_sheet(path: String, frame_size: Vector2i):
 				break  
 			
 			var frame = sprite_sheet.get_region(Rect2(x, y_start, frame_size.x, frame_size.y))
+			
 			var frame_texture = ImageTexture.create_from_image(frame)
 			frame_texture.set_size_override(Vector2i(frame_size.x,frame_size.y))
 			
