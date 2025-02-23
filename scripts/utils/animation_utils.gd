@@ -1,7 +1,23 @@
 extends Node
 class_name AnimationUtils
 
+static func load_avatar(path: String, frame_size: Vector2i) -> Sprite2D:
+	var sprite = Sprite2D.new()
 
+	var image = Image.load_from_file(path)
+	if not image:
+		push_error("Failed to load image from path: ", path)
+		return sprite
+
+	image.resize(frame_size.x, frame_size.y, Image.INTERPOLATE_LANCZOS)
+
+	var texture = ImageTexture.create_from_image(image)
+	sprite.texture = texture
+	return sprite
+
+
+static func load_action_animation_sheet(path: String, frame_size: Vector2i):
+	return load_equipment_animation_sheet(path, frame_size)
 ## equipment sprite loader, assumes 4 directions to draw
 static func load_equipment_animation_sheet(path: String, frame_size: Vector2i):
 	var sprite_sheet = Image.load_from_file(path)
@@ -84,8 +100,12 @@ static func load_character_animation_sheet(path: String, frame_size: Vector2i):
 		for x in range(0, sheet_width, frame_size.x):
 			if x + frame_size.x > sheet_width:
 				break  
-			
+				
 			var frame = sprite_sheet.get_region(Rect2(x, y_start, frame_size.x, frame_size.y))
+
+			if is_frame_empty(frame):
+				continue  # Skip empty frames
+				
 			
 			var frame_texture = ImageTexture.create_from_image(frame)
 			frame_texture.set_size_override(Vector2i(frame_size.x,frame_size.y))
@@ -103,6 +123,13 @@ static func load_character_animation_sheet(path: String, frame_size: Vector2i):
 	
 
 	return animated_sprite
+
+static func is_frame_empty(image: Image) -> bool:
+	for y in range(image.get_height()):
+		for x in range(image.get_width()):
+			if image.get_pixel(x, y).a > 0.0:  # if any pixel has opacity, it's not empty
+				return false
+	return true
 
 ## only for ONE dimension of sprites
 static func load_spritesheet(sprite_path: String, frame_size: Vector2i, frame_count: int, animation_name, pos, isloop):

@@ -796,3 +796,7 @@ scale = Vector2(5.14, 5.14)
 texture = ExtResource("8_lf7fp")
 
 [node name="SpeedTrailLine2D" parent="CharacterBody2D" instance=ExtResource("9_i54jv")]
+
+[node name="RayCast2D" type="RayCast2D" parent="CharacterBody2D"]
+collision_mask = 16
+collide_with_bodies = false

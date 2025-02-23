@@ -54,7 +54,7 @@ func _on_Area2D_body_entered(body):
 func apply_knockback(body):
 	var direction = (body.position - pos).normalized()
 	
-	var knockback_force = -direction * knockback_strength
+	var knockback_force = -direction * knockback_strength * 10
 	
 	if body.has_method("apply_knockback"):
 		body.apply_knockback(knockback_force)

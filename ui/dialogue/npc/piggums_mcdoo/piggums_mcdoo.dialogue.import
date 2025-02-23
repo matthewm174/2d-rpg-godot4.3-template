@@ -1,0 +1,15 @@
+[remap]
+
+importer="dialogue_manager_compiler_14"
+type="Resource"
+uid="uid://dpy0audmpshxb"
+path="res://.godot/imported/piggums_mcdoo.dialogue-8a11c5e82302d1dc75b2e1298886916e.tres"
+
+[deps]
+
+source_file="res://ui/dialogue/npc/piggums_mcdoo/piggums_mcdoo.dialogue"
+dest_files=["res://.godot/imported/piggums_mcdoo.dialogue-8a11c5e82302d1dc75b2e1298886916e.tres"]
+
+[params]
+
+defaults=true

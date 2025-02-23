@@ -54,7 +54,7 @@ func strafe(direction: Vector2) -> void:
 	can_strafe = false
 	speed_trail_line_2d.visible=true
 	if direction == Vector2.ZERO:
-		return  # Don't strafe if there's no input direction
+		return
 
 	var strafe_timer = get_tree().create_timer(strafe_duration)
 	strafe_timer.timeout.connect(_on_strafe_finished)

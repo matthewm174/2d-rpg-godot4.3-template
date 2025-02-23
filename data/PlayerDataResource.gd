@@ -56,12 +56,15 @@ func get_player_data():
 		Globals.player_data.stat_points_available = 5
 		Globals.player_data.skill_points_used = 1
 		Globals.player_data.unlocked_spells = ['fire_ball', 'teleport']
+		
 
 		Globals.player_data.equipped_spells = { 0: null, 1: null, 2: null, 3: null }
 		if testing:
 			Globals.player_data.inventory.inv_slots.append(Globals.item_resources.master_spell_book["fire_ball"])
 			Globals.player_data.inventory.inv_slots.append(Globals.item_resources.master_spell_book["teleport"])
 			Globals.player_data.inventory.inv_slots.append(Globals.item_resources.master_weapon_book["short_sword"])
+			#Globals.player_data.inventory.inv_slots.append(Globals.item_resources.master_armor_book["iron_pauldron_r"])
+			
 		
 
 	else:

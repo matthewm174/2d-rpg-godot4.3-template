@@ -16,8 +16,9 @@ class_name In_Game_Ui
 @onready var inventory_item_list: ItemList = $PlayerUi/ItemsHSplitContainer/InventoryItemList
 @onready var main_menu_item_list: ItemList = $MainMenuItemList
 @onready var spell_grid_container: GridContainer = $SpellGridContainer
-
 @onready var skill_stat_allocator: SkillStatAllocator = $PlayerUi/SkillStatAllocator
+
+
 
 
 var default_stylebox

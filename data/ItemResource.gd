@@ -5,6 +5,7 @@ class_name ItemResources
 var master_spell_book: Dictionary
 var master_weapon_book: Dictionary
 var master_usables_book: Dictionary
+var master_clothing_book: Dictionary
 
 func load_sprite_with_texture(texture_path: String) -> Sprite2D:
 	var new_sprite = Sprite2D.new()
@@ -84,6 +85,8 @@ func _init():
 	[Spell.TARGET_EFFECT.EXPLOSION]
 	)
 	master_spell_book["fire_ball"] = sp_fire_ball
+	
+
 	
 	var sp_teleport: Spell = Spell.new(
 		0.0, #explode dur

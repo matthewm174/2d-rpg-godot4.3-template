@@ -1,6 +1,6 @@
 extends TileMapLayer
 
-## NOTE: all avoidance should be stored in ID > 0!! atleast, this is what the script assumes
+## NOTE: all avoidance should be stored in ID == 1!! atleast, this is what the script assumes
 
 func _use_tile_data_runtime_update(coords: Vector2i) -> bool:
 	if coords in get_used_cells_by_id(1):

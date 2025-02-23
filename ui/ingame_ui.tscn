@@ -17,6 +17,7 @@ grow_vertical = 2
 script = ExtResource("1_j475u")
 
 [node name="PlayerUi" type="TabContainer" parent="."]
+visible = false
 clip_contents = true
 layout_mode = 0
 offset_right = 1150.0

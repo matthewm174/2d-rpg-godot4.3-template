@@ -17,11 +17,9 @@ var hitbox
 @export var health := 10
 @export var speed := 50
 @export var patrol_points: Array[Vector2]
-@export var vision_radius: float = 300.0
-@export var attack_range: float = 100.0
-@export var cast_range: float = 400.0
-@export var attack_cooldown: float = 2.0
-@export var spell_cooldown: float = 3.0
+
+
+
 var debug_path: PackedVector2Array = []
 var current_target = 0
 var caster = false
@@ -36,6 +34,14 @@ var is_dead: bool = false
 var facing = "up"
 var last_player_position: Vector2 = Vector2.ZERO  # <-- ADD THIS
 var enemy_area
+var is_patrolling = true
+## PLACEHOLDERS
+@export var vision_radius: float = 200.0
+@export var attack_range: float = 100.0
+@export var cast_range: float = 200.0
+@export var attack_cooldown: float = 2.0
+@export var spell_cooldown: float = 3.0
+var return_to_patrol_time = 3.0
 func _init(hp: float, spd: float, pat_points: Array[Vector2], animations: AnimatedSprite2D, spells: Array[Spell], weapon: Wearable_Item):
 	health = hp
 	speed = spd
@@ -49,7 +55,6 @@ func _init(hp: float, spd: float, pat_points: Array[Vector2], animations: Animat
 	hitbox = Area2D.new()
 	var hb_shape = RectangleShape2D.new()
 	var base_size = enemy_animated_sprite_2d.get_sprite_frames().get_frame_texture("walk_up", 0).get_size()
-	#hitbox = base_size - base_size/3
 	hb_collision = CollisionShape2D.new()
 	hb_shape.size = base_size - base_size/3
 	hb_collision.shape = hb_shape
@@ -65,8 +70,17 @@ func _init(hp: float, spd: float, pat_points: Array[Vector2], animations: Animat
 	add_child(enemy_area)
 	
 
+
+	
+
 func _process(delta: float) -> void:
-	if agent.is_navigation_finished():
+	if is_knockback_active:
+		return
+		
+	if agent.is_navigation_finished() and not is_patrolling:
+		is_patrolling = true
+		path_change_timer.wait_time = return_to_patrol_time
+		path_change_timer.start()
 		return
 
 	var desired_velocity = (agent.get_next_path_position() - global_position).normalized() * 100
@@ -126,9 +140,11 @@ func _ready() -> void:
 	detection_area.body_exited.connect(_on_body_exited)
 	var nav_map = tilemap.get_navigation_map()
 	agent.set_navigation_map(nav_map)
+	path_change_timer.timeout.connect(_on_path_change_timer_timeout)
 	add_child(detection_area)
 	add_child(agent)
 	setup_agent()
+	add_child(path_change_timer)
 
 	
 func _on_velocity_computed(safe_velocity):
@@ -148,11 +164,11 @@ func setup_agent():
 	agent.path_max_distance = 300.0
 	#agent.target_desired_distance = 100.0/
 	agent.path_desired_distance = 200.00
-	#if rigid_body_coll_shape_2d.shape is RectangleShape2D:
-		#var width = rigid_body_coll_shape_2d.shape.extents.x * 2
-		#var height = rigid_body_coll_shape_2d.shape.extents.y * 2
-		#var radius = min(width, height) / 2.0
-		#agent.radius = radius
+	if enemy_area.shape is RectangleShape2D:
+		var width = enemy_area.shape.extents.x * 2
+		var height = enemy_area.shape.extents.y * 2
+		var radius = min(width, height) / 2.0
+		agent.radius = radius
 	agent.path_postprocessing = NavigationPathQueryParameters2D.PATH_POSTPROCESSING_EDGECENTERED
 	agent.debug_enabled = true
 	agent.debug_path_custom_line_width = 3.0
@@ -227,14 +243,10 @@ func _physics_process(delta):
 		if knockback_velocity.length() < 1.0:
 			is_knockback_active = false
 		return
-	#print(position)
-	#print(global_position)
-	#print(Globals.current_player.position)
-	#print(Globals.current_player.global_position)
-	#print(Globals.current_player.character_body_2d.position)
-	#print(Globals.current_player.character_body_2d.global_position)
+
 	var target_pos = Globals.current_player.character_body_2d.global_position
 	if player_in_range and target_pos:
+		is_patrolling = false
 		var distance = global_position.distance_to(target_pos)
 		if target_pos.distance_to(last_player_position) > 5.0:
 			agent.target_position = target_pos
