@@ -4,6 +4,8 @@ class_name PlayerCharacterBody2d
 @onready var anim_lock_timer: Timer = $Timer
 const ProjectileSpell = preload("res://scripts/projectile/Projectile.tscn")
 const TargetSpell = preload("res://scripts/target_spell/TargetSpell.tscn")
+const DIALOGUE_UI = preload("res://ui/dialogue/dialogue_ui.tscn")
+
 var player_inventory: Inventory
 var player_data_resource: PlayerDataResource
 @onready var character_body_2d: CharacterBody2D = $"."
@@ -11,7 +13,10 @@ var player_data_resource: PlayerDataResource
 var stats: Dictionary
 @onready var speed_trail_line_2d: Line2D = $SpeedTrailLine2D
 
+@onready var interaction_ray_cast_2d: RayCast2D = $InteractionRayCast2d
+
 enum Direction { RIGHT, LEFT, UP, DOWN}
+var set_up_new_quests = false
 var facing_direction = Direction.DOWN
 var move_dir = facing_direction
 var is_animating_spell = false;
@@ -30,7 +35,17 @@ var can_strafe = true
 var knockback_velocity: Vector2 = Vector2.ZERO
 var is_knockback_active: bool = false     
 var skills: Dictionary
+var interacting_npc 
+var is_talking = false
+var current_expression: Sprite2D
 
+var expressions: Array[Sprite2D]
+
+var new_quests: Dictionary
+var active_quests: Dictionary
+
+
+#var dlg
 @export var strafe_duration: float = 0.1  # How long the strafe lasts (in seconds)
 @export var strafe_cooldown: float = 1.0
 
@@ -40,6 +55,10 @@ func _init():
 	
 
 func _ready():
+
+
+	expressions.append(AnimationUtils.load_avatar("res://sprites/player/dummy_avatar.png", Vector2(128,128)))
+	set_current_expression(expressions[0])
 	speed_trail_line_2d.visible=false
 	load_player_data()
 	anim_lock_timer.wait_time = 0.5
@@ -104,9 +123,7 @@ func set_current_spell() -> void:
 	for child in Globals.in_game_ui.spell_grid_container.get_children():
 		if child is Panel:
 			clear_spell_selection(child)
-	
-	# Check which spell key was pressed
-	for i in range(4):  # max 4
+	for i in range(max_equippable_spells):  # max 4
 		if Input.is_action_just_pressed("spell_" + str(i)):
 			current_spell = Globals.player_data.equipped_spells[i]
 			highlight_spell_selection(Globals.in_game_ui.spell_grid_container.get_children()[i])
@@ -357,6 +374,44 @@ func apply_knockback(direction: Vector2):
 	await get_tree().create_timer(knockback_duration).timeout
 	is_knockback_active = false
 
+func check_interaction_collision():
+	if interaction_ray_cast_2d.is_colliding():
+		var hit_object = interaction_ray_cast_2d.get_collider()
+		if hit_object is Area2D and hit_object.has_meta("npc"):
+			interacting_npc = hit_object.get_parent()
+		else:
+			interacting_npc = null
+	else:
+		interacting_npc = null
+
+	if interacting_npc and Input.is_action_just_pressed("interact"):
+		if not is_talking:
+			is_talking = true
+			start_dialogue(interacting_npc)
+
+#figure out a way to make this more flexible
+func start_dialogue(npc: Npc):
+	var dlg = DIALOGUE_UI.instantiate()
+	add_child(dlg)
+	dlg.visible = true
+
+	dlg.start(
+		npc.npc_dialogue,
+		"start",
+		{ npc.npc_name: npc.npc_avatar_normal,
+		"You": current_expression },
+		npc.npc_id
+	)
+
+func set_current_expression(sprite: Sprite2D):
+	current_expression = sprite
+
+func find_and_create_new_quests():
+	for quest in new_quests:
+		print(quest)
+	
+	active_quests.merge(new_quests, false)
+
 
 func _physics_process(delta):
 	var velocity = Vector2.ZERO
@@ -369,21 +424,33 @@ func _physics_process(delta):
 		move_and_slide()
 
 func _process(delta):
+	
+	if set_up_new_quests:
+		find_and_create_new_quests()
+		set_up_new_quests = false
+		
+	
 	var mouse_position = get_global_mouse_position()
 	var direction = (mouse_position - global_position).normalized()
 	
 	var direction_local = direction.rotated(-rotation)
 	aim_angle = rad_to_deg(direction_local.angle())
 	
+	check_interaction_collision()
+	
 	
 
 	if aim_angle >= -45 and aim_angle < 45:
 		move_dir = Direction.RIGHT  # Right
+		interaction_ray_cast_2d.rotation_degrees = 90
 	elif aim_angle >= 45 and aim_angle < 135:
 		move_dir = Direction.DOWN # Up
+		interaction_ray_cast_2d.rotation_degrees = 180
 	elif aim_angle >= 135 or aim_angle < -135:
 		move_dir = Direction.LEFT  # Left
+		interaction_ray_cast_2d.rotation_degrees = 270
 	else:
 		move_dir = Direction.UP # Down
+		interaction_ray_cast_2d.rotation_degrees = 0
 	set_animation()
 	set_current_spell()

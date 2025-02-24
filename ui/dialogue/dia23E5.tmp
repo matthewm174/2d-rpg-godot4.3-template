@@ -1,0 +1,75 @@
+[gd_scene load_steps=5 format=3 uid="uid://dq0duocj7y3dy"]
+
+[ext_resource type="Script" path="res://ui/dialogue/dialogue_ui.gd" id="1_n2l1w"]
+
+[sub_resource type="Theme" id="Theme_ph6cd"]
+
+[sub_resource type="SystemFont" id="SystemFont_4w51k"]
+subpixel_positioning = 0
+
+[sub_resource type="Theme" id="Theme_4b0sd"]
+default_font = SubResource("SystemFont_4w51k")
+default_font_size = 16
+
+[node name="DialogueUiCanvas" type="CanvasLayer"]
+script = ExtResource("1_n2l1w")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(1000, 150)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -500.0
+offset_top = -150.0
+offset_right = 500.0
+grow_horizontal = 2
+grow_vertical = 0
+theme = SubResource("Theme_ph6cd")
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="PortraitRect" type="TextureRect" parent="PanelContainer/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/HBoxContainer/PortraitRect"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="PortraitImage" type="TextureRect" parent="PanelContainer/MarginContainer/HBoxContainer/PortraitRect/MarginContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="SpeakerName" type="Label" parent="PanelContainer/MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="DialogueText" type="RichTextLabel" parent="PanelContainer/MarginContainer/HBoxContainer/VBoxContainer"]
+z_index = 2
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
+
+[node name="NextIndicator" type="Label" parent="PanelContainer/MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "> Cont."
+
+[node name="Spacer" type="Control" parent="PanelContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="ResponseContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme = SubResource("Theme_4b0sd")
+
+[connection signal="gui_input" from="PanelContainer" to="." method="_on_panel_container_gui_input"]

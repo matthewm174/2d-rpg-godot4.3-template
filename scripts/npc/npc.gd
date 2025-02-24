@@ -12,13 +12,16 @@ var dialogue_trigger_area: Area2D
 var npc_pat_points
 var npc_animated_sprite_2d_idle
 var npc_animated_sprite_2d_walk
+var npc_avatar_normal
+var npc_avatar_sad
+var npc_avatar_angry
+var npc_avatar_normal2
 var facing = "up"
 var current_target_index: int = 0
 @export var wait_time: float = 3.0
 var timer: Timer
 const ACTIONABLE = preload("res://ui/actionable/actionable.tscn")
 var actionable_instance 
-const DIALOGUE_UI = preload("res://ui/dialogue/dialogue_ui.tscn")
 var npc_dialogue: DialogueResource
 var npc_quest_state: Dictionary
 var is_talking = false
@@ -49,12 +52,13 @@ func add_dialogue_actionable_collision():
 	
 
 func _ready():
-	
-	# Initialize the dialogue trigger area
-	dialogue_trigger_area = Area2D.new()
 	var collision_shape = CollisionShape2D.new()
 	var shape = CircleShape2D.new()
-	shape.radius = 50.0  # Radius of the trigger area
+	# Initialize the dialogue trigger area
+	dialogue_trigger_area = Area2D.new()
+	dialogue_trigger_area.set_collision_layer_value(5, true)
+	dialogue_trigger_area.set_meta("npc", true)
+	shape.radius = 50.0
 	collision_shape.shape = shape
 	dialogue_trigger_area.add_child(collision_shape)
 	
@@ -122,17 +126,9 @@ func _on_body_entered(body):
 	if body is CharacterBody2D:
 		if body.is_in_group("player"): 
 			stop_moving()
-			start_dialogue()
+			#start_dialogue()
 			
-func start_dialogue():
-	is_talking = true
-	var dlg = DIALOGUE_UI.instantiate()
-	get_tree().current_scene.add_child(dlg)
-	
-	dlg.start(
-		npc_dialogue,
-		"start"
-	)
+
 
 func _on_dialogue_ended():
 	Globals.in_game_ui.hide_dialogue_ui()
