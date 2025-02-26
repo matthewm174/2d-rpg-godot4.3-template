@@ -42,16 +42,19 @@ var is_patrolling = true
 @export var attack_cooldown: float = 2.0
 @export var spell_cooldown: float = 3.0
 var return_to_patrol_time = 3.0
+var enemy_spells: Array[Spell]
+var enemy_weapon: Wearable_Item
 func _init(hp: float, spd: float, pat_points: Array[Vector2], animations: AnimatedSprite2D, spells: Array[Spell], weapon: Wearable_Item):
 	health = hp
 	speed = spd
 	patrol_points = pat_points
+	enemy_weapon = weapon
+	enemy_spells = spells
 	if spells.is_empty():
 		caster = false
 	enemy_animated_sprite_2d = animations
 	add_child(enemy_animated_sprite_2d)
 	enemy_animated_sprite_2d.animation_finished.connect(_on_animation_finished)
-	
 	hitbox = Area2D.new()
 	var hb_shape = RectangleShape2D.new()
 	var base_size = enemy_animated_sprite_2d.get_sprite_frames().get_frame_texture("walk_up", 0).get_size()
@@ -61,15 +64,24 @@ func _init(hp: float, spd: float, pat_points: Array[Vector2], animations: Animat
 	hb_collision
 	hitbox.add_child(hb_collision)
 	add_child(hitbox)
-	
 	enemy_area = CollisionShape2D.new()
 	enemy_area.add_to_group("enemies")
 	enemy_area.disabled = false
 	enemy_area.shape = hb_shape
-	
 	add_child(enemy_area)
 	
+static func duplicate_instance(reference: Enemy, pat_points: Array[Vector2]):
+	print(reference.enemy_weapon.get_class())
 
+	var new_enemy = Enemy.new(
+		reference.health,
+		reference.speed,
+		pat_points,
+		reference.enemy_animated_sprite_2d.duplicate(),
+		reference.enemy_spells.duplicate(),
+		reference.enemy_weapon
+	)
+	return new_enemy
 
 	
 
@@ -138,6 +150,8 @@ func _ready() -> void:
 	detection_area.add_child(collision_shape)
 	detection_area.body_entered.connect(_on_body_entered)
 	detection_area.body_exited.connect(_on_body_exited)
+	if not tilemap:
+		self.tilemap = Globals.fantasy_game_state.ground
 	var nav_map = tilemap.get_navigation_map()
 	agent.set_navigation_map(nav_map)
 	path_change_timer.timeout.connect(_on_path_change_timer_timeout)

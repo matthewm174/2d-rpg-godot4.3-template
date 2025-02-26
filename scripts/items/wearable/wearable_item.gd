@@ -31,7 +31,6 @@ enum ITEM_TYPE {
 
 
 
-
 var item_equip_location: WEARABLE_LOCATION
 var item_type: ITEM_TYPE
 var item_graphic: Sprite2D #display graphic inv

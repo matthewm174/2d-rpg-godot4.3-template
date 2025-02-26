@@ -1,15 +1,25 @@
-~ start
-if not QuestState.master_quest_book["piggums_mcdoo"]["the_dark_skeleton"]["started"]:
+~ the_dark_skeleton
+
+#var current_quest_QUEST_STARTED
+#var current_quest_QUEST_ORDER
+#var current_quest_QUEST_COMPLETED
+#var current_quest_QUEST_SPAWN
+#var current_quest_QUEST_LOCATION
+#var current_quest_QUEST_REQUIREMENTS
+#var current_quest_QUEST_ORDER_MAX
+
+if not QuestState.current_quest_QUEST_STARTED:
 	Piggums McDoo: I can't leave! That skeleton is still out there! Oh god Oh Fuck, Oh... Hello there
 	Piggums McDoo: Can you take care of that nasty boy out yonder?
 	- Help out Piggums McDoo
-		set QuestState.master_quest_book["piggums_mcdoo"]["the_dark_skeleton"]["started"] = true
+		set QuestState.current_quest_QUEST_STARTED = true
+		set QuestState.init_quest = true
 		You: Sure I can help.
 		Piggums McDoo: OK
 	- Ignore
 		You: ...
 		Piggums McDoo: OK
-elif QuestState.master_quest_book["piggums_mcdoo"]["the_dark_skeleton"]["completed"]:
+elif QuestState.current_quest_QUEST_COMPLETED:
 	Piggums McDoo: Holy crap, you did it.
 else:
 	Piggums McDoo: Is he still out there? God I hate Skeletons.

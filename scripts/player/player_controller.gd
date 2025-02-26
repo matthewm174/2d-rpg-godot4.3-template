@@ -86,8 +86,6 @@ func _on_strafe_finished() -> void:
 	can_strafe = true
 	
 
-
-
 func load_stats_skills():
 	for key in Globals.player_data.stats:
 		Globals.current_player.stats[key] =  Globals.player_data.stats[key]
@@ -394,13 +392,24 @@ func start_dialogue(npc: Npc):
 	var dlg = DIALOGUE_UI.instantiate()
 	add_child(dlg)
 	dlg.visible = true
-
+	
+	var current_quest = QuestState.get_next_incomplete_quest(QuestState.master_quest_book, npc.npc_id)
+	var current_quest_data = current_quest.data
+	
+	QuestState.current_quest_QUEST_ORDER = current_quest.data[QuestState.QUEST_META.QUEST_ORDER]
+	QuestState.current_quest_QUEST_COMPLETED = current_quest.data[QuestState.QUEST_META.QUEST_COMPLETED]
+	QuestState.current_quest_QUEST_STARTED = current_quest.data[QuestState.QUEST_META.QUEST_STARTED]
+	QuestState.current_quest_QUEST_SPAWN = current_quest.data[QuestState.QUEST_META.QUEST_SPAWN]
+	QuestState.current_quest_QUEST_LOCATION = current_quest.data[QuestState.QUEST_META.QUEST_LOCATION]
+	QuestState.current_quest_QUEST_REQUIREMENTS = current_quest.data[QuestState.QUEST_META.QUEST_REQUIREMENTS]
+	
 	dlg.start(
 		npc.npc_dialogue,
-		"start",
-		{ npc.npc_name: npc.npc_avatar_normal,
-		"You": current_expression },
-		npc.npc_id
+		current_quest.name,
+		{ 
+			npc.npc_name: npc.npc_avatar_normal,
+			"You": current_expression
+		},
 	)
 
 func set_current_expression(sprite: Sprite2D):
@@ -412,6 +421,93 @@ func find_and_create_new_quests():
 	
 	active_quests.merge(new_quests, false)
 
+func handle_new_quest_notification(quest_requirements: String):
+	# Create the notification container
+	var notification = Panel.new()
+	notification.custom_minimum_size = Vector2(300, 150)
+	notification.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	notification.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	
+	# Style the panel
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.15, 0.2, 0.9)
+	style.corner_radius_top_left = 10
+	style.corner_radius_top_right = 10
+	style.corner_radius_bottom_left = 10
+	style.corner_radius_bottom_right = 10
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(0.7, 0.6, 0.2)
+	notification.add_theme_stylebox_override("panel", style)
+	
+	# Create a VBoxContainer for layout
+	var vbox = VBoxContainer.new()
+	vbox.custom_minimum_size = Vector2(280, 130)
+	vbox.size_flags_horizontal = Control.SIZE_FILL
+	vbox.size_flags_vertical = Control.SIZE_FILL
+	vbox.position = Vector2(10, 10)
+	
+	# Create title label
+	var title = Label.new()
+	title.text = "New Quest!"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	
+	# Style the title
+	title.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
+	title.add_theme_font_size_override("font_size", 24)
+	
+	# Create requirements label
+	var requirements_label = Label.new()
+	requirements_label.text = quest_requirements
+	requirements_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	requirements_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	requirements_label.custom_minimum_size = Vector2(260, 0)
+	
+	# Add a spacer
+	var spacer = Control.new()
+	spacer.custom_minimum_size = Vector2(0, 10)
+	
+	# Add a button to dismiss
+	var button = Button.new()
+	button.text = "Accept"
+	button.custom_minimum_size = Vector2(100, 30)
+	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	button.focus_mode = Control.FOCUS_NONE
+	
+	# Add controls to layout
+	vbox.add_child(title)
+	vbox.add_child(spacer)
+	vbox.add_child(requirements_label)
+	vbox.add_child(button)
+	
+	# Add vbox to notification
+	notification.add_child(vbox)
+	
+	# Set starting position (off-screen)
+	notification.position = Vector2(300, notification.custom_minimum_size.y)
+
+	# Add notification to the UI
+	Globals.in_game_ui.add_child(notification)
+	
+	# Create a tween for animation
+	var tween = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(notification, "position:y", 50, 0.5)
+	
+	# Connect button signal
+	button.pressed.connect(func():
+		var dismiss_tween = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+		dismiss_tween.tween_property(notification, "position:y", -150, 0.3)
+		dismiss_tween.tween_callback(notification.queue_free)
+	)
+	
+	# Auto-dismiss after 10 seconds
+	await get_tree().create_timer(10.0).timeout
+	if is_instance_valid(notification) and notification.is_inside_tree():
+		var timeout_tween = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+		timeout_tween.tween_property(notification, "position:y", -150, 0.3)
+		timeout_tween.tween_callback(notification.queue_free)
 
 func _physics_process(delta):
 	var velocity = Vector2.ZERO

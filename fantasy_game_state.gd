@@ -11,6 +11,7 @@ func _init() -> void:
 	Globals.enemy_resources = MobResource.new()
 	Globals.player_data =  PlayerDataResource.new()
 	Globals.npc_data = NpcResource.new()
+	Globals.fantasy_game_state = self
 	
 func _ready():
 	var skeleton: Enemy = Globals.enemy_resources.master_mobs_book["skeleton"]

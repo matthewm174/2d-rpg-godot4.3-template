@@ -1,5 +1,6 @@
 extends Node
 
+var fantasy_game_state
 var current_player: PlayerCharacterBody2d
 var item_resources: ItemResources
 var player_data: PlayerDataResource

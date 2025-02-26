@@ -1,5 +1,5 @@
 extends CanvasLayer
-
+const ENEMY = preload("res://scripts/mobs/Enemy.tscn")
 ## Dialogue UI Controller ##
 @onready var panel_container: PanelContainer = $PanelContainer
 @onready var margin_container: MarginContainer = $PanelContainer/MarginContainer
@@ -17,11 +17,12 @@ var response_text_rtf: RichTextLabel = RichTextLabel.new()
 const PANEL_STYLE = preload("res://ui/dialogue/dialogue_style_box.tres")
 const SPEAKER_NAME_FONT = preload("res://ui/dialogue/dialogue_label_settings.tres")
 var dialog_avatars
+var quest_accepted
 var will_hide_balloon
 var previous_quest_state_master_quest_book
-var quest_owner_id
 var is_waiting_for_input: bool = false
 var resource: DialogueResource
+var current_quest
 var dialogue_line: DialogueLine:
 	set(next_dialogue_line):
 		if not next_dialogue_line:
@@ -127,12 +128,11 @@ func _on_response_gui_input(event: InputEvent, item: Control) -> void:
 	elif event.is_action_pressed("ui_accept") and item in get_responses():
 		next(dialogue_line.responses[item.get_index()].next_id)
 
-func start(dialogue_resource: DialogueResource, title: String, avatars: Dictionary, quest_owner) -> void:
+func start(dialogue_resource: DialogueResource, title: String, avatars: Dictionary) -> void:
 	previous_quest_state_master_quest_book = _deep_copy(QuestState.master_quest_book)
 	dialog_avatars = avatars
 	resource = dialogue_resource
 	is_waiting_for_input = false
-	quest_owner_id = quest_owner
 	self.dialogue_line = await resource.get_next_dialogue_line(title)
 	show_dialogue()
 
@@ -196,15 +196,22 @@ func _on_mutated(_mutation: Dictionary) -> void:
 			will_hide_balloon = false
 			hide()
 	)
-	
-func find_different_keys(dict1: Dictionary, dict2: Dictionary) -> Array:
-	var different_keys = []
-	# Check for keys added/removed
-	var all_keys = dict1.keys() + dict2.keys()
-	for key in all_keys:
-		if dict1.get(key, null) != dict2.get(key, null):
-			different_keys.append(key)
-	return different_keys
+func dictionary_difference(dict1: Dictionary, dict2: Dictionary) -> Dictionary:
+	var difference = {}
+
+	# Check keys in dict1 that are not in dict2 or have different values
+	for key in dict1:
+		if not dict2.has(key):
+			difference[key] = dict1[key]
+		elif dict1[key] != dict2[key]:
+			difference[key] = {"dict1": dict1[key], "dict2": dict2[key]}
+
+	# Check keys in dict2 that are not in dict1
+	for key in dict2:
+		if not dict1.has(key):
+			difference[key] = dict2[key]
+
+	return difference
 
 func _deep_copy(d: Dictionary) -> Dictionary:
 	var copy = d.duplicate(false)
@@ -220,71 +227,41 @@ func find_quest_changes(prev: Dictionary, current: Dictionary) -> Dictionary:
 		"modified": []
 	}
 	
-	# Check all possible quest givers
-	var all_givers = prev.keys() + current.keys()
-	
-	for giver in all_givers:
-		var prev_giver = prev.get(giver, {})
-		var curr_giver = current.get(giver, {})
-		
-		# Check for added/removed quest givers
-		if giver not in prev:
-			changes["added"].append({"giver": giver, "quests": curr_giver.keys()})
-			continue
-		if giver not in current:
-			changes["removed"].append(giver)
-			continue
-			
-		# Check individual quests within giver
-		var all_quests = prev_giver.keys() + curr_giver.keys()
-		for quest_key in all_quests:
-			var prev_quest = prev_giver.get(quest_key, {})
-			var curr_quest = curr_giver.get(quest_key, {})
-			
-			if prev_quest != curr_quest:
-				var modified_fields = []
-				for field in ["started", "completed", "quest_spawn", "quest_location"]:
-					if prev_quest.get(field, null) != curr_quest.get(field, null):
-						modified_fields.append(field)
-				
-				changes["modified"].append({
-					"giver": giver,
-					"quest": quest_key,
-					"fields": modified_fields
-				})
-	
+	var test = dictionary_difference(prev[current_quest], current[current_quest])
+
 	return changes
+
+func generate_patrol_points(origin: Vector2) -> Array[Vector2]:
+	var patrol_points: Array[Vector2] = []
+	
+	for i in range(3):
+		var random_offset = Vector2(
+			randf_range(-100, 100), 
+			randf_range(-100, 100)
+		)
+		patrol_points.append(origin + random_offset)
+	
+	return patrol_points
+
+func handle_spawns():
+	for spawn in QuestState.current_quest_QUEST_SPAWN:
+		var enemy_copy = Globals.enemy_resources.master_mobs_book[spawn]
+		var pat_points: Array[Vector2] = generate_patrol_points(QuestState.current_quest_QUEST_LOCATION)
+		var enemy = Enemy.duplicate_instance(enemy_copy, pat_points)
+		enemy.position = pat_points[0]
+		
+		
+		Globals.fantasy_game_state.add_child(enemy)
+
 
 func _on_dialogue_ended(_dialogue_resource: DialogueResource):
 	Globals.current_player.is_talking = false
-	var changes = find_quest_changes(previous_quest_state_master_quest_book, QuestState.master_quest_book)
-	
-	for added in changes["added"]:
-		for quest_key in added["quests"]:
-			var quest = QuestState.master_quest_book[added["giver"]][quest_key]
-			if quest["started"]:
-				_spawn_quest(added["giver"], quest_key, quest)
-	
-	for modification in changes["modified"]:
-		var quest = QuestState.master_quest_book[modification["giver"]][modification["quest"]]
-		
-		if "started" in modification["fields"] && quest["started"]:
-			_spawn_quest(modification["giver"], modification["quest"], quest)
-		
-		if "quest_spawn" in modification["fields"] || "quest_location" in modification["fields"]:
-			_update_quest_spawns(modification["giver"], modification["quest"], quest)
 
-
-func _spawn_quest(giver: String, quest_key: String, quest: Dictionary):
-	print("Spawning %s's %s quest: %s at %s" % [
-		giver,
-		quest_key,
-		quest["quest_spawn"],
-		quest["quest_location"]
-	])
-
-func _update_quest_spawns(giver: String, quest_key: String, quest: Dictionary):
-	print("Updating spawns for %s's %s quest" % [giver, quest_key])
+	if QuestState.init_quest:
+		## TODO: IMPLEMENT
+		handle_spawns()
+		Globals.current_player.handle_new_quest_notification(QuestState.current_quest_QUEST_REQUIREMENTS)
+		QuestState.init_quest = false
 
 func handle_dialogue_flow() -> void:
 	if dialogue_line.text.is_empty(): return
