@@ -249,8 +249,6 @@ func handle_spawns():
 		var pat_points: Array[Vector2] = generate_patrol_points(QuestState.current_quest_QUEST_LOCATION)
 		var enemy = Enemy.duplicate_instance(enemy_copy, pat_points)
 		enemy.position = pat_points[0]
-		
-		
 		Globals.fantasy_game_state.add_child(enemy)
 
 
@@ -258,7 +256,6 @@ func _on_dialogue_ended(_dialogue_resource: DialogueResource):
 	Globals.current_player.is_talking = false
 
 	if QuestState.init_quest:
-		## TODO: IMPLEMENT
 		handle_spawns()
 		Globals.current_player.handle_new_quest_notification(QuestState.current_quest_QUEST_REQUIREMENTS)
 		QuestState.init_quest = false

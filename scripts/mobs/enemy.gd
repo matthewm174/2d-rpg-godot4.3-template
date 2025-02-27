@@ -1,49 +1,70 @@
 extends CharacterBody2D
 class_name Enemy
 
-var enemy_animated_sprite_2d
+# Enums
 enum Direction { RIGHT, LEFT, UP, DOWN }
-var is_animating_spell = false
-var is_animating_attack = false
-var impulse = Vector2.ZERO
-func is_animating():
-	return is_animating_spell || is_animating_attack
-var knockback_velocity = Vector2()
-var hb_collision
-var hitbox
-@onready var agent = NavigationAgent2D.new()
+
+# Constants
+const ProjectileSpell = preload("res://scripts/projectile/Projectile.tscn")
+const TargetSpell = preload("res://scripts/target_spell/TargetSpell.tscn")
+
+# Exported Variables
 @export var tilemap: TileMapLayer
-@onready var path_change_timer = Timer.new()
 @export var health := 10
 @export var speed := 50
 @export var patrol_points: Array[Vector2]
-
-
-
-var debug_path: PackedVector2Array = []
-var current_target = 0
-var caster = false
-var is_knockback_active = false
-var target_position: Vector2
-var direction: Vector2
-var player_ref: CharacterBody2D = null
-var player_in_range: bool = false
-var can_attack: bool = true
-var can_cast: bool = true
-var is_dead: bool = false
-var facing = "up"
-var last_player_position: Vector2 = Vector2.ZERO  # <-- ADD THIS
-var enemy_area
-var is_patrolling = true
-## PLACEHOLDERS
 @export var vision_radius: float = 200.0
 @export var attack_range: float = 100.0
 @export var cast_range: float = 200.0
 @export var attack_cooldown: float = 2.0
 @export var spell_cooldown: float = 3.0
-var return_to_patrol_time = 3.0
+
+# Node References
+@onready var agent = NavigationAgent2D.new()
+@onready var path_change_timer = Timer.new()
+
+# Animation and Movement
+var enemy_animated_sprite_2d
+var is_animating_spell = false
+var is_animating_attack = false
+var knockback_velocity = Vector2()
+var impulse = Vector2.ZERO
+var is_knockback_active = false
+var direction: Vector2
+var facing = "up"
+var is_patrolling = true
+
+# Combat and Spells
+var caster = false
+var can_attack: bool = true
+var can_cast: bool = true
+var current_spell: Spell
 var enemy_spells: Array[Spell]
 var enemy_weapon: Wearable_Item
+
+# Player Interaction
+var player_ref: CharacterBody2D = null
+var player_in_range: bool = false
+var last_player_position: Vector2 = Vector2.ZERO
+var target_position: Vector2
+
+# Pathfinding and Patrol
+var debug_path: PackedVector2Array = []
+var current_target = 0
+var return_to_patrol_time = 3.0
+
+# Hitbox and Area
+var hb_collision
+var hitbox
+var enemy_area
+
+# State Management
+var is_dead: bool = false
+
+# Helper Functions
+func is_animating() -> bool:
+	return is_animating_spell || is_animating_attack
+	
 func _init(hp: float, spd: float, pat_points: Array[Vector2], animations: AnimatedSprite2D, spells: Array[Spell], weapon: Wearable_Item):
 	health = hp
 	speed = spd
@@ -52,6 +73,8 @@ func _init(hp: float, spd: float, pat_points: Array[Vector2], animations: Animat
 	enemy_spells = spells
 	if spells.is_empty():
 		caster = false
+	else:
+		caster = true
 	enemy_animated_sprite_2d = animations
 	add_child(enemy_animated_sprite_2d)
 	enemy_animated_sprite_2d.animation_finished.connect(_on_animation_finished)
@@ -196,6 +219,49 @@ func setup_agent():
 	agent.path_changed.connect(_on_path_changed)
 	
 
+func create_projectile_for_current_spell():
+	
+	if current_spell == null:
+		return
+	var mouse_position = get_global_mouse_position()
+	var direction = (mouse_position - position).normalized()
+	if current_spell.spell_type == Spell.CAST_TYPES.PROJECTILE:
+		var projectile = ProjectileSpell.instantiate()
+		projectile.direction = direction
+		print(direction)
+		projectile.speed = current_spell.spell_speed
+		projectile.explosion_duration = current_spell.explosion_dur
+		projectile.explosion_radius = current_spell.explosion_radius
+		projectile.damage = current_spell.spell_damage
+		projectile.explosion_sprite_path = current_spell.explode_animation
+		projectile.animation_name="missle"
+		projectile.distance = current_spell.spell_range
+		projectile.frame_count=7
+		projectile.explodes = current_spell.explodes
+		projectile.sprite_path=current_spell.spell_animation
+		projectile.frame_size = Vector2i(64,64)
+		projectile.position = position
+		var computed_angle = rad_to_deg(direction.angle()) + 180.0
+		projectile.rotation_degrees = fposmod(computed_angle, 360.0)
+		get_tree().current_scene.add_child(projectile)
+	if current_spell.spell_type == Spell.CAST_TYPES.TARGET:
+		var target_spell = TargetSpell.instantiate()
+		target_spell.damage = current_spell.spell_damage
+		target_spell.animation_name = "missle"
+		target_spell.frame_size = Vector2i(64,64)
+		target_spell.sprite_path = current_spell.spell_animation
+		target_spell.frame_count=7
+		target_spell.position = mouse_position
+		target_spell.explosion_duration = current_spell.explosion_dur
+		target_spell.explosion_radius = current_spell.explosion_radius
+		target_spell.initial_position = mouse_position
+		target_spell.explosion_sprite_path = current_spell.explode_animation
+		target_spell.explodes = current_spell.explodes
+		target_spell.target_effects = current_spell.target_effects
+		get_tree().current_scene.add_child(target_spell)
+		
+
+
 
 func try_attack():
 	if can_attack and player_ref:
@@ -203,12 +269,21 @@ func try_attack():
 		is_animating_attack = true
 		enemy_animated_sprite_2d.play("attack_"+facing)
 
+#TODO: make this more intelligent
+func select_spell():
+	
+	if enemy_spells.is_empty():
+		return -1
+	
+	return randi() % enemy_spells.size()
 
 func try_cast():
 	if caster and can_cast and player_ref:
 		can_cast = false
 		is_animating_spell = true
 		enemy_animated_sprite_2d.play("cast_"+facing)
+		select_spell()
+		create_projectile_for_current_spell()
 
 
 func set_animation_from_direction(direction: Vector2):

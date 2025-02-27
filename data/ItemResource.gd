@@ -56,7 +56,19 @@ func _init():
 	Vector2i(64,64)))
 	master_weapon_book["bastard_sword"] = bastard_sword
 	
-	
+	#var iron_pauldron: Weapon = Weapon.new(10.0, 
+	#Weapon.DAMAGE_TYPES.SLASH, 
+	#false, 
+	#"Sword for Bastards", 
+	#load_sprite_with_texture("res://sprites/inventory/weapons/iron_pauldron_inventory.png"), 
+	#Wearable_Item.UNIQUENESS.COMMON, 
+	#[], 
+	#"Bastard Sword", 
+	#Wearable_Item.ITEM_TYPE.SWORD, 
+	#Wearable_Item.WEARABLE_LOCATION.Primary_Hand, "bastard_sword", 
+	#AnimationUtils.load_equipment_animation_sheet("res://equipment/slash/WEAPON_dagger.png", 
+	#Vector2i(64,64)))
+	#master_weapon_book["bastard_sword"] = bastard_sword
 	
 	#explode_dur, explode_rad, speed, 
 	#stype, sdmg, srng, 

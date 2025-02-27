@@ -1,53 +1,64 @@
 extends CharacterBody2D
 class_name PlayerCharacterBody2d
-@onready var player_animated_sprite_2d: AnimatedSprite2D = $PlayerAnimatedSprite2d
-@onready var anim_lock_timer: Timer = $Timer
+
+# Enums
+enum Direction { RIGHT, LEFT, UP, DOWN }
+
+# Constants
 const ProjectileSpell = preload("res://scripts/projectile/Projectile.tscn")
 const TargetSpell = preload("res://scripts/target_spell/TargetSpell.tscn")
 const DIALOGUE_UI = preload("res://ui/dialogue/dialogue_ui.tscn")
 
-var player_inventory: Inventory
-var player_data_resource: PlayerDataResource
+# Node References
+@onready var player_animated_sprite_2d: AnimatedSprite2D = $PlayerAnimatedSprite2d
+@onready var anim_lock_timer: Timer = $Timer
 @onready var character_body_2d: CharacterBody2D = $"."
 @onready var camera_2d: Camera2D = $Camera2D
-var stats: Dictionary
 @onready var speed_trail_line_2d: Line2D = $SpeedTrailLine2D
-
 @onready var interaction_ray_cast_2d: RayCast2D = $InteractionRayCast2d
 
-enum Direction { RIGHT, LEFT, UP, DOWN}
-var set_up_new_quests = false
+# Player Data and Inventory
+var player_inventory: Inventory
+var player_data_resource: PlayerDataResource
+var stats: Dictionary
+var skills: Dictionary
+
+var player_weapon_holding_type = Weapon.ITEM_TYPE.SWORD
+
+# Movement and Animation
 var facing_direction = Direction.DOWN
+var facing = "down"
 var move_dir = facing_direction
-var is_animating_spell = false;
-var is_animating_attack = false;
-var showing_inventory = false;
+var is_animating_spell = false
+var is_animating_attack = false
+var knockback_velocity: Vector2 = Vector2.ZERO
+var is_knockback_active: bool = false
+var can_strafe = true
+@export var strafe_duration: float = 0.1  # How long the strafe lasts (in seconds)
+@export var strafe_cooldown: float = 1.0  # Cooldown between strafes (in seconds)
+
+# Spells and Combat
 var available_spells = {}
 var equipped_spells = {}
-var showing_menu = false;
-var max_equippable_spells = 4;
+var max_equippable_spells = 4
 var spell_equip_index = 0
 var current_spell: Spell
 var current_spell_panel
 var weapon_sprite: AnimatedSprite2D
 var aim_angle
-var can_strafe = true
-var knockback_velocity: Vector2 = Vector2.ZERO
-var is_knockback_active: bool = false     
-var skills: Dictionary
-var interacting_npc 
-var is_talking = false
-var current_expression: Sprite2D
 
-var expressions: Array[Sprite2D]
-
+# Quests and Dialogue
+var set_up_new_quests = false
 var new_quests: Dictionary
 var active_quests: Dictionary
+var interacting_npc
+var is_talking = false
+var current_expression: Sprite2D
+var expressions: Array[Sprite2D]
 
-
-#var dlg
-@export var strafe_duration: float = 0.1  # How long the strafe lasts (in seconds)
-@export var strafe_cooldown: float = 1.0
+# UI and Menu
+var showing_inventory = false
+var showing_menu = false
 
 func _init():
 	Globals.current_player = self
@@ -203,12 +214,22 @@ func equip_inv_item(item_metadata: Wearable_Item):
 func add_item_to_player_body(item_meta: Wearable_Item):
 	var item_to_equip
 	if item_meta.item_type == item_meta.ITEM_TYPE.SWORD and not weapon_sprite:
+		player_weapon_holding_type = item_meta.ITEM_TYPE.SWORD
 		weapon_sprite = item_meta.weapon_character_sprite
 		weapon_sprite.position = player_animated_sprite_2d.position
 		weapon_sprite.z_index = 2
 		weapon_sprite.animation_finished.connect(_on_wep_animation_finished)
 		add_child(weapon_sprite)
 		item_to_equip = Globals.item_resources.master_weapon_book[item_meta.item_id]
+	if item_meta.item_type == item_meta.ITEM_TYPE.BOW and not weapon_sprite:
+		player_weapon_holding_type = item_meta.ITEM_TYPE.BOW
+		weapon_sprite = item_meta.weapon_character_sprite
+		weapon_sprite.position = player_animated_sprite_2d.position
+		weapon_sprite.z_index = 2
+		weapon_sprite.animation_finished.connect(_on_wep_animation_finished)
+		add_child(weapon_sprite)
+		item_to_equip = Globals.item_resources.master_weapon_book[item_meta.item_id]
+
 
 	if item_meta.item_type == Wearable_Item.ITEM_TYPE.SPELL:
 		item_to_equip = Globals.item_resources.master_spell_book[item_meta.item_id]
@@ -271,29 +292,17 @@ func handle_spell():
 
 func _on_wep_animation_finished():
 	weapon_sprite.visible = false
-	
+
+
 func handle_attack():
 	weapon_sprite.visible = true
 	
-	#weapon_sprite.speed_scale = 2
-	#player_animated_sprite_2d.speed_scale = 2
-	match move_dir:
-		Direction.UP:
-			if(weapon_sprite):
-				weapon_sprite.play("up")
-			player_animated_sprite_2d.play("man_attack_up")
-		Direction.DOWN:
-			if(weapon_sprite):
-				weapon_sprite.play("down")
-			player_animated_sprite_2d.play("man_attack_down")
-		Direction.LEFT:
-			if(weapon_sprite):
-				weapon_sprite.play("left")
-			player_animated_sprite_2d.play("man_attack_left")
-		Direction.RIGHT:
-			if(weapon_sprite):
-				weapon_sprite.play("right")
-			player_animated_sprite_2d.play("man_attack_right")
+	if(weapon_sprite):
+		weapon_sprite.play(facing)
+		if player_weapon_holding_type == Weapon.ITEM_TYPE.SWORD:
+			player_animated_sprite_2d.play("man_attack_"+facing)
+		if player_weapon_holding_type == Weapon.ITEM_TYPE.BOW:
+			player_animated_sprite_2d.play("man_bow_"+facing)
 	player_animated_sprite_2d.speed_scale = 1
 
 func is_animating():
@@ -538,15 +547,19 @@ func _process(delta):
 
 	if aim_angle >= -45 and aim_angle < 45:
 		move_dir = Direction.RIGHT  # Right
+		facing = "right"
 		interaction_ray_cast_2d.rotation_degrees = 90
 	elif aim_angle >= 45 and aim_angle < 135:
 		move_dir = Direction.DOWN # Up
+		facing = "down"
 		interaction_ray_cast_2d.rotation_degrees = 180
 	elif aim_angle >= 135 or aim_angle < -135:
 		move_dir = Direction.LEFT  # Left
+		facing = "left"
 		interaction_ray_cast_2d.rotation_degrees = 270
 	else:
 		move_dir = Direction.UP # Down
+		facing = "up"
 		interaction_ray_cast_2d.rotation_degrees = 0
 	set_animation()
 	set_current_spell()

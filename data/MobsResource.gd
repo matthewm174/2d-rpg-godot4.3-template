@@ -11,5 +11,6 @@ func _init():
 
 
 	var dark_skeleton_animations = AnimationUtils.load_character_animation_sheet("res://sprites/enemies/skeleton/dark_skeleton_sprites.png", Vector2(64, 64))
-	var dark_skeleton: Enemy = Enemy.new(20, 20, [], dark_skeleton_animations, [], Globals.item_resources.master_weapon_book["short_sword"])
+	var dark_skeleton: Enemy = Enemy.new(20, 20, [], dark_skeleton_animations, [Globals.item_resources.master_spell_book['fire_ball']], Globals.item_resources.master_weapon_book["short_sword"])
+	
 	master_mobs_book["dark_skeleton"] = dark_skeleton

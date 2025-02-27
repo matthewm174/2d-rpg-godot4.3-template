@@ -70,4 +70,3 @@ func get_player_data():
 	else:
 		print("LOAD SAVE CALLED.")
 		Globals.player_data = data
-		#load save
