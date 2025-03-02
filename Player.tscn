@@ -1123,7 +1123,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_0g3u7"]
-size = Vector2(70, 75)
+size = Vector2(21, 48)
 
 [sub_resource type="Animation" id="Animation_1756j"]
 resource_name = "new_animation"
@@ -1153,6 +1153,7 @@ animation = &"man_idle_left"
 script = ExtResource("5_vn3hn")
 
 [node name="PlayerCollision" type="CollisionShape2D" parent="CharacterBody2D"]
+position = Vector2(0.5, 6)
 shape = SubResource("RectangleShape2D_0g3u7")
 
 [node name="Timer" type="Timer" parent="CharacterBody2D"]

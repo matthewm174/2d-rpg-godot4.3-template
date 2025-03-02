@@ -75,15 +75,18 @@ enum ENEMY_STATE {
 	IDLE
 }
 var state_timer = Timer.new()
-var chase_state_interval: float = 13.0
+var chase_state_interval: float = 7.0
 var state_interval: float = 10.0
-var search_state_interval: float = 22.0
+var search_state_interval: float = 10.0
 
 var search_timer = Timer.new()
 
 
 @export var path_update_interval: float = 0.3 
 var path_update_timer = Timer.new()
+
+
+
 func is_animating() -> bool:
 	return is_animating_spell || is_animating_attack
 	
@@ -153,6 +156,7 @@ func _ready() -> void:
 	search_timer.wait_time = 3
 	search_timer.autostart = false
 	search_timer.timeout.connect(_on_search_change_timer_timeout)
+	add_child(search_timer)
 	
 	path_update_timer.wait_time = path_update_interval
 	path_update_timer.autostart = false
@@ -165,15 +169,19 @@ func _ready() -> void:
 		enemy_state = ENEMY_STATE.IDLE
 
 func _update_state():
+	print("state %s", enemy_state)
 	match enemy_state:
 		ENEMY_STATE.CHASE:
-			velocity = Vector2.ZERO
 			enemy_state = ENEMY_STATE.SEARCH
+			search_points = Vector2Utils.generate_patrol_points(global_position, 8, 200)
 			state_timer.wait_time = search_state_interval
+			search_timer.start()
 			state_timer.start()
 		ENEMY_STATE.SEARCH:
-			velocity = Vector2.ZERO
+			search_timer.stop()
 			enemy_state = ENEMY_STATE.PATROL
+			if patrol_change_timer.is_stopped():
+				patrol_change_timer.start()
 
 
 static func duplicate_instance(reference: Enemy, pat_points: Array[Vector2]):
@@ -242,7 +250,7 @@ func _on_velocity_computed(safe_velocity):
 func _on_path_changed():
 	debug_path = agent.get_current_navigation_path()
 	print(debug_path)
-	path_update_timer.start()
+	#path_update_timer.start()
 	
 func set_new_target(pos: Vector2):
 	agent.set_target_position(pos)
@@ -282,7 +290,6 @@ func create_projectile_for_current_spell():
 	if current_spell.spell_type == Spell.CAST_TYPES.PROJECTILE:
 		var projectile = ProjectileSpell.instantiate()
 		projectile.direction = direction
-		print(direction)
 		projectile.speed = current_spell.spell_speed
 		projectile.explosion_duration = current_spell.explosion_dur
 		projectile.explosion_radius = current_spell.explosion_radius
@@ -326,7 +333,6 @@ func try_attack():
 
 #TODO: make this more intelligent
 func select_spell():
-	
 	if enemy_spells.is_empty():
 		return -1
 	
@@ -414,26 +420,14 @@ func _physics_process(delta):
 			try_cast()
 			should_move = false
 		
-
-	if enemy_state == ENEMY_STATE.CHASE:
-		
+	if should_move:
 		var move_target = agent.get_next_path_position()
-		movement_direction = (move_target - global_position).normalized()
-		velocity = movement_direction * speed
-	if enemy_state == ENEMY_STATE.SEARCH:
-		search_points = Vector2Utils.generate_patrol_points(global_position, 8, 200)
-		
-
-	if enemy_state == ENEMY_STATE.PATROL:
-		if patrol_change_timer.is_stopped():
-			patrol_change_timer.start()
-		
-		var move_target = agent.get_next_path_position()
-		movement_direction = (move_target - global_position).normalized()
-		velocity = movement_direction * speed
-	move_and_slide()
-	if velocity.length() > speed * 0.1:
-		set_animation_from_direction(movement_direction)
+		if global_position.distance_to(move_target) > 1.0:
+			movement_direction = (move_target - global_position).normalized()
+			velocity = movement_direction * speed
+			move_and_slide()
+			if velocity.length() > speed * 0.1:
+				set_animation_from_direction(movement_direction)
 
 func _update_navigation_path():
 	
@@ -441,6 +435,6 @@ func _update_navigation_path():
 		return
 	var target_pos = Globals.current_player.character_body_2d.global_position
 	
-	if target_pos.distance_to(last_player_position) > 90.0:  # Avoid small jittery updates
+	if target_pos.distance_to(last_player_position) > 90.0 and player_in_range:  # Avoid small jittery updates
 		agent.target_position = target_pos
 		last_player_position = target_pos
