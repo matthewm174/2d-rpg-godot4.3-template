@@ -126,8 +126,6 @@ func _on_body_entered(body):
 	if body is CharacterBody2D:
 		if body.is_in_group("player"): 
 			stop_moving()
-			#start_dialogue()
-			
 
 
 func _on_dialogue_ended():

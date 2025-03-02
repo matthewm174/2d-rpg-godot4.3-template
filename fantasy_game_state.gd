@@ -22,5 +22,4 @@ func _ready():
 	var piggums: Npc = Globals.npc_data.master_npc_book["piggums_mcdoo"]
 	piggums.position = Vector2(300, 300)
 	add_child(piggums)
-	#skeleton.z_index = 0
 	

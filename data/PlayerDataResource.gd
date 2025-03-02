@@ -63,7 +63,7 @@ func get_player_data():
 			Globals.player_data.inventory.inv_slots.append(Globals.item_resources.master_spell_book["fire_ball"])
 			Globals.player_data.inventory.inv_slots.append(Globals.item_resources.master_spell_book["teleport"])
 			Globals.player_data.inventory.inv_slots.append(Globals.item_resources.master_weapon_book["short_sword"])
-			#Globals.player_data.inventory.inv_slots.append(Globals.item_resources.master_armor_book["iron_pauldron_r"])
+			Globals.player_data.inventory.inv_slots.append(Globals.item_resources.master_weapon_book["cedar_bow"])
 			
 		
 

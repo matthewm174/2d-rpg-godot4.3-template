@@ -608,7 +608,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_de6l2")
 }],
-"loop": true,
+"loop": false,
 "name": &"man_attack_down",
 "speed": 5.0
 }, {
@@ -631,7 +631,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_c7qxo")
 }],
-"loop": true,
+"loop": false,
 "name": &"man_attack_left",
 "speed": 5.0
 }, {
@@ -654,7 +654,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_qaquk")
 }],
-"loop": true,
+"loop": false,
 "name": &"man_attack_right",
 "speed": 5.0
 }, {
@@ -677,7 +677,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_wpt7g")
 }],
-"loop": true,
+"loop": false,
 "name": &"man_attack_up",
 "speed": 5.0
 }, {
@@ -721,7 +721,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_0g3nv")
 }],
-"loop": true,
+"loop": false,
 "name": &"man_bow_down",
 "speed": 5.0
 }, {
@@ -765,7 +765,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_juaqn")
 }],
-"loop": true,
+"loop": false,
 "name": &"man_bow_left",
 "speed": 5.0
 }, {
@@ -809,7 +809,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_5vp5w")
 }],
-"loop": true,
+"loop": false,
 "name": &"man_bow_right",
 "speed": 5.0
 }, {
@@ -879,7 +879,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_6om43")
 }],
-"loop": true,
+"loop": false,
 "name": &"man_cast_down",
 "speed": 5.0
 }, {
@@ -905,7 +905,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_y530c")
 }],
-"loop": true,
+"loop": false,
 "name": &"man_cast_left",
 "speed": 5.0
 }, {
@@ -931,7 +931,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_2y62j")
 }],
-"loop": true,
+"loop": false,
 "name": &"man_cast_right",
 "speed": 5.0
 }, {
@@ -957,7 +957,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_21qbr")
 }],
-"loop": true,
+"loop": false,
 "name": &"man_cast_up",
 "speed": 5.0
 }, {
@@ -1149,7 +1149,7 @@ script = ExtResource("1_gxfhm")
 
 [node name="PlayerAnimatedSprite2d" type="AnimatedSprite2D" parent="CharacterBody2D"]
 sprite_frames = SubResource("SpriteFrames_cn56x")
-animation = &"man_bow_up"
+animation = &"man_idle_left"
 script = ExtResource("5_vn3hn")
 
 [node name="PlayerCollision" type="CollisionShape2D" parent="CharacterBody2D"]

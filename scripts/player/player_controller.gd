@@ -66,19 +66,12 @@ func _init():
 	
 
 func _ready():
-
-
 	expressions.append(AnimationUtils.load_avatar("res://sprites/player/dummy_avatar.png", Vector2(128,128)))
 	set_current_expression(expressions[0])
 	speed_trail_line_2d.visible=false
 	load_player_data()
-	anim_lock_timer.wait_time = 0.5
-	anim_lock_timer.timeout.connect(func(): 
-		is_animating_spell = false;
-		is_animating_attack = false;
-	)
-
-
+	
+	player_animated_sprite_2d.animation_finished.connect(_on_animation_finished)
 
 func strafe(direction: Vector2) -> void:
 	can_strafe = false
@@ -89,8 +82,6 @@ func strafe(direction: Vector2) -> void:
 	var strafe_timer = get_tree().create_timer(strafe_duration)
 	strafe_timer.timeout.connect(_on_strafe_finished)
 	
-
-
 func _on_strafe_finished() -> void:
 	player_animated_sprite_2d.speed_scale = 1
 	speed_trail_line_2d.visible = false
@@ -140,7 +131,6 @@ func set_current_spell() -> void:
 	if(current_spell_panel):
 		current_spell_panel.add_theme_stylebox_override("panel", Globals.in_game_ui.selected_stylebox)
 	
-
 
 func create_projectile_for_current_spell():
 	
@@ -229,8 +219,6 @@ func add_item_to_player_body(item_meta: Wearable_Item):
 		weapon_sprite.animation_finished.connect(_on_wep_animation_finished)
 		add_child(weapon_sprite)
 		item_to_equip = Globals.item_resources.master_weapon_book[item_meta.item_id]
-
-
 	if item_meta.item_type == Wearable_Item.ITEM_TYPE.SPELL:
 		item_to_equip = Globals.item_resources.master_spell_book[item_meta.item_id]
 
@@ -267,14 +255,14 @@ func get_input():
 	var input_direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	var base_speed = stats["Speed"] * 20
 	if Input.is_action_pressed("sprint"):
-		player_animated_sprite_2d.speed_scale = 2
+		player_animated_sprite_2d.speed_scale = 1
 		base_speed *= 1.5
 	elif Input.is_action_just_released("sprint"):
 		player_animated_sprite_2d.speed_scale = 1
 	if Input.is_action_just_pressed("strafe") and can_strafe and velocity.length() > 0:
 		strafe(input_direction)
 	if not can_strafe:
-		player_animated_sprite_2d.speed_scale = 3
+		player_animated_sprite_2d.speed_scale = 1
 		base_speed *= 6.0
 	velocity = input_direction * base_speed
 
@@ -292,18 +280,23 @@ func handle_spell():
 
 func _on_wep_animation_finished():
 	weapon_sprite.visible = false
+	
+func _on_animation_finished():
+	is_animating_spell = false;
+	is_animating_attack = false;
+	
 
 
 func handle_attack():
 	weapon_sprite.visible = true
-	
+	player_animated_sprite_2d.speed_scale = 1
 	if(weapon_sprite):
 		weapon_sprite.play(facing)
 		if player_weapon_holding_type == Weapon.ITEM_TYPE.SWORD:
 			player_animated_sprite_2d.play("man_attack_"+facing)
 		if player_weapon_holding_type == Weapon.ITEM_TYPE.BOW:
 			player_animated_sprite_2d.play("man_bow_"+facing)
-	player_animated_sprite_2d.speed_scale = 1
+	
 
 func is_animating():
 	# chain together animation blockers
@@ -328,10 +321,10 @@ func set_animation():
 		
 	if Input.is_action_pressed("spell_attack"):
 		is_animating_spell = true;
-		anim_lock_timer.start(1.0)
+		#anim_lock_timer.start(1.0)
 	elif Input.is_action_pressed("wep_attack"):
 		is_animating_attack = true;
-		anim_lock_timer.start(1.0)
+		#anim_lock_timer.start(1.0)
 
 	if is_animating_spell:
 		handle_spell()
@@ -431,13 +424,12 @@ func find_and_create_new_quests():
 	active_quests.merge(new_quests, false)
 
 func handle_new_quest_notification(quest_requirements: String):
-	# Create the notification container
+
 	var notification = Panel.new()
 	notification.custom_minimum_size = Vector2(300, 150)
 	notification.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	notification.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	
-	# Style the panel
+
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.15, 0.15, 0.2, 0.9)
 	style.corner_radius_top_left = 10
@@ -451,67 +443,55 @@ func handle_new_quest_notification(quest_requirements: String):
 	style.border_color = Color(0.7, 0.6, 0.2)
 	notification.add_theme_stylebox_override("panel", style)
 	
-	# Create a VBoxContainer for layout
 	var vbox = VBoxContainer.new()
 	vbox.custom_minimum_size = Vector2(280, 130)
 	vbox.size_flags_horizontal = Control.SIZE_FILL
 	vbox.size_flags_vertical = Control.SIZE_FILL
 	vbox.position = Vector2(10, 10)
-	
-	# Create title label
+
 	var title = Label.new()
 	title.text = "New Quest!"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	
-	# Style the title
 	title.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
 	title.add_theme_font_size_override("font_size", 24)
-	
-	# Create requirements label
+
 	var requirements_label = Label.new()
 	requirements_label.text = quest_requirements
 	requirements_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	requirements_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	requirements_label.custom_minimum_size = Vector2(260, 0)
 	
-	# Add a spacer
 	var spacer = Control.new()
 	spacer.custom_minimum_size = Vector2(0, 10)
 	
-	# Add a button to dismiss
 	var button = Button.new()
 	button.text = "Accept"
 	button.custom_minimum_size = Vector2(100, 30)
 	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	button.focus_mode = Control.FOCUS_NONE
 	
-	# Add controls to layout
 	vbox.add_child(title)
 	vbox.add_child(spacer)
 	vbox.add_child(requirements_label)
 	vbox.add_child(button)
 	
-	# Add vbox to notification
 	notification.add_child(vbox)
 	
-	# Set starting position (off-screen)
 	notification.position = Vector2(300, notification.custom_minimum_size.y)
 
-	# Add notification to the UI
 	Globals.in_game_ui.add_child(notification)
 	
-	# Create a tween for animation
 	var tween = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(notification, "position:y", 50, 0.5)
 	
-	# Connect button signal
+
 	button.pressed.connect(func():
 		var dismiss_tween = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 		dismiss_tween.tween_property(notification, "position:y", -150, 0.3)
 		dismiss_tween.tween_callback(notification.queue_free)
 	)
-	
-	# Auto-dismiss after 10 seconds
+
 	await get_tree().create_timer(10.0).timeout
 	if is_instance_valid(notification) and notification.is_inside_tree():
 		var timeout_tween = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
@@ -542,9 +522,6 @@ func _process(delta):
 	aim_angle = rad_to_deg(direction_local.angle())
 	
 	check_interaction_collision()
-	
-	
-
 	if aim_angle >= -45 and aim_angle < 45:
 		move_dir = Direction.RIGHT  # Right
 		facing = "right"
