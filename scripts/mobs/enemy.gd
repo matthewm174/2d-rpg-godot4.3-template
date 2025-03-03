@@ -1,14 +1,12 @@
 extends CharacterBody2D
 class_name Enemy
 
-# Enums
+
 enum Direction { RIGHT, LEFT, UP, DOWN }
 
-# Constants
 const ProjectileSpell = preload("res://scripts/projectile/Projectile.tscn")
 const TargetSpell = preload("res://scripts/target_spell/TargetSpell.tscn")
 
-# Exported Variables
 @export var tilemap: TileMapLayer
 @export var health := 10
 @export var speed := 50
@@ -20,13 +18,11 @@ var search_points: Array[Vector2]
 @export var attack_cooldown: float = 2.0
 @export var spell_cooldown: float = 3.0
 
-# Node References
 @onready var agent = NavigationAgent2D.new()
 @onready var patrol_change_timer = Timer.new()
 var steering: ContextSteering
 
 var last_player_position = Vector2(0,0)
-# Animation and Movement
 var enemy_animated_sprite_2d
 var is_animating_spell = false
 var is_animating_attack = false
