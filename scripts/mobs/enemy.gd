@@ -23,7 +23,7 @@ var search_points: Array[Vector2]
 # Node References
 @onready var agent = NavigationAgent2D.new()
 @onready var patrol_change_timer = Timer.new()
-#var steering: ContextSteering
+var steering: ContextSteering
 
 var last_player_position = Vector2(0,0)
 # Animation and Movement
@@ -68,11 +68,12 @@ var enemy_state
 enum ENEMY_STATE {
 	DEAD,
 	PATROL,
-	CHASE,
+	CHASE, ## use for long range 
 	ATTACK,
 	FLEE,
 	SEARCH,
-	IDLE
+	IDLE,
+	APPROACH ## use for short ranges
 }
 var state_timer = Timer.new()
 var chase_state_interval: float = 7.0
@@ -80,7 +81,7 @@ var state_interval: float = 10.0
 var search_state_interval: float = 10.0
 
 var search_timer = Timer.new()
-
+var avoidance_direction
 
 @export var path_update_interval: float = 0.3 
 var path_update_timer = Timer.new()
@@ -137,7 +138,9 @@ func _ready() -> void:
 
 	for nav_region in get_tree().get_nodes_in_group("navigation"):
 		nav_region.set_navigation_map(nav_map)
-	
+		
+	steering = ContextSteering.new(self)
+	add_child(steering)
 
 	add_child(detection_area)
 	add_child(agent)
@@ -163,10 +166,26 @@ func _ready() -> void:
 	path_update_timer.timeout.connect(_update_navigation_path)
 	add_child(path_update_timer)
 	
+	steering.direction_updated.connect(_on_direction_updated)
+	
 	if patrol_points.size() > 0:
 		enemy_state = ENEMY_STATE.PATROL
 	else:
 		enemy_state = ENEMY_STATE.IDLE
+
+func _on_direction_updated(new_direction: Vector2):
+	print("New direction received:", new_direction)
+	avoidance_direction = new_direction
+
+func _meander_idle_timer():
+	if is_dead:
+		return
+	current_target = (current_target + 1) % search_points.size()
+	target_position = search_points[current_target]
+	agent.target_position = target_position
+	search_timer.start()
+	
+
 
 func _update_state():
 	print("state %s", enemy_state)
@@ -370,7 +389,6 @@ func take_damage(damage):
 func apply_knockback(knockback_force: Vector2):
 	knockback_velocity = knockback_force
 	is_knockback_active = true
-	
 
 func _on_search_change_timer_timeout():
 	if is_dead || search_points.is_empty():
@@ -423,11 +441,15 @@ func _physics_process(delta):
 	if should_move:
 		var move_target = agent.get_next_path_position()
 		if global_position.distance_to(move_target) > 1.0:
-			movement_direction = (move_target - global_position).normalized()
-			velocity = movement_direction * speed
+			var blend_weight = 0.5
+			var move_target_dir = (move_target - global_position).normalized()
+			movement_direction = (move_target_dir * (1.0 - blend_weight) + avoidance_direction * blend_weight).normalized()
+			velocity = movement_direction  * speed
 			move_and_slide()
 			if velocity.length() > speed * 0.1:
 				set_animation_from_direction(movement_direction)
+	steering.calculate_direction(delta)
+
 
 func _update_navigation_path():
 	
@@ -435,6 +457,6 @@ func _update_navigation_path():
 		return
 	var target_pos = Globals.current_player.character_body_2d.global_position
 	
-	if target_pos.distance_to(last_player_position) > 90.0 and player_in_range:  # Avoid small jittery updates
+	if target_pos.distance_to(last_player_position) > 30.0 and player_in_range:
 		agent.target_position = target_pos
 		last_player_position = target_pos
