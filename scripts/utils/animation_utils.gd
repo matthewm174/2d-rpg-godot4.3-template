@@ -96,7 +96,6 @@ static func load_character_animation_sheet(path: String, frame_size: Vector2i):
 		var frames = [] 
 		var y_start = row * frame_size.y
 		
-		# Iterate through columns in the row
 		for x in range(0, sheet_width, frame_size.x):
 			if x + frame_size.x > sheet_width:
 				break  

@@ -231,22 +231,12 @@ func find_quest_changes(prev: Dictionary, current: Dictionary) -> Dictionary:
 
 	return changes
 
-func generate_patrol_points(origin: Vector2) -> Array[Vector2]:
-	var patrol_points: Array[Vector2] = []
-	
-	for i in range(3):
-		var random_offset = Vector2(
-			randf_range(-100, 100), 
-			randf_range(-100, 100)
-		)
-		patrol_points.append(origin + random_offset)
-	
-	return patrol_points
+
 
 func handle_spawns():
 	for spawn in QuestState.current_quest_QUEST_SPAWN:
 		var enemy_copy = Globals.enemy_resources.master_mobs_book[spawn]
-		var pat_points: Array[Vector2] = generate_patrol_points(QuestState.current_quest_QUEST_LOCATION)
+		var pat_points: Array[Vector2] = Vector2Utils.generate_patrol_points(QuestState.current_quest_QUEST_LOCATION, 3, 100)
 		var enemy = Enemy.duplicate_instance(enemy_copy, pat_points)
 		enemy.position = pat_points[0]
 		Globals.fantasy_game_state.add_child(enemy)

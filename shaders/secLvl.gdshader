@@ -2,7 +2,7 @@ shader_type canvas_item;
 
 uniform sampler2D screen_texture : hint_screen_texture;
 uniform sampler2D mask_texture;
-uniform vec2 center = vec2(0.5, 0.5); 
+uniform vec2 center = vec2(0.5, 0.5);
 uniform float radius = 0.1;
 uniform float feather = 0.3;
 uniform float distortion_strength = 0.03;

@@ -35,6 +35,12 @@ func hide_main_menu():
 	main_menu_item_list.visible = false
 
 func _ready() -> void:
+	player_ui.set_tab_title(0, "Equipment")
+	player_ui.set_tab_title(1, "Skills")
+	player_ui.set_tab_title(2, "Stats")
+	
+	
+	
 	default_stylebox = StyleBoxFlat.new()
 	default_stylebox.bg_color = Color(0.2, 0.2, 0.2, 0.3) 
 	default_stylebox.border_color = Color(0.5, 0.5, 0.5, 1.0) 
