@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://dglqw5flk22gi"]
 
-[ext_resource type="Script" path="res://ui/ingame_ui.gd" id="1_j475u"]
-[ext_resource type="Script" path="res://ui/inventory_item_list.gd" id="2_0oi5u"]
+[ext_resource type="Script" uid="uid://dktoxbk0bccby" path="res://ui/ingame_ui.gd" id="1_j475u"]
+[ext_resource type="Script" uid="uid://8sxbkg4jkqap" path="res://ui/inventory_item_list.gd" id="2_0oi5u"]
 [ext_resource type="PackedScene" uid="uid://cbrm6tcml3rjw" path="res://scripts/skills/SkillTreeUI.tscn" id="3_74q7y"]
 [ext_resource type="PackedScene" uid="uid://bw72va76maloo" path="res://scripts/skills/SkillStatAllocator.tscn" id="4_oplyt"]
 

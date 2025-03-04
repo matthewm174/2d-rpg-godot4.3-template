@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://d0m0sus45c0"]
 
-[ext_resource type="Shader" path="res://shaders/secLvl.gdshader" id="1_kqso7"]
-[ext_resource type="Shader" path="res://shaders/camera_1.gdshader" id="1_xa3o7"]
+[ext_resource type="Shader" uid="uid://b1qwhd2gwsige" path="res://shaders/secLvl.gdshader" id="1_kqso7"]
+[ext_resource type="Shader" uid="uid://be7hfn34dorjt" path="res://shaders/camera_1.gdshader" id="1_xa3o7"]
 
 [sub_resource type="GDScript" id="GDScript_phpmx"]
 script/source = "extends Node2D

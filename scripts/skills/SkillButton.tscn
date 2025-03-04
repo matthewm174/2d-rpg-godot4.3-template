@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://biyqfysayv00l"]
 
-[ext_resource type="Script" path="res://scripts/skills/skill_texture_button.gd" id="1_ma4ea"]
+[ext_resource type="Script" uid="uid://duu8oq16idi2w" path="res://scripts/skills/skill_texture_button.gd" id="1_ma4ea"]
 
 [node name="SkillButton" type="Control"]
 layout_mode = 3

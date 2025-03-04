@@ -144,6 +144,7 @@ func create_projectile_for_current_spell():
 		var projectile = ProjectileSpell.instantiate()
 		projectile.direction = direction
 		print(direction)
+		projectile.projectile_owner_group = self.get_groups()
 		projectile.speed = current_spell.spell_speed
 		projectile.explosion_duration = current_spell.explosion_dur
 		projectile.explosion_radius = current_spell.explosion_radius

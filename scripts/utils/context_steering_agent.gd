@@ -30,8 +30,6 @@ func calculate_direction(delta: float) -> Vector2:
 	_choose_direction()
 	return chosen_dir
 
-#func _process(delta):
-#queue_redraw()	
 
 func _get_target_direction() -> Vector2:
 	if agent.agent.is_navigation_finished():

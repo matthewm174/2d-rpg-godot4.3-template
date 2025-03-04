@@ -28,6 +28,9 @@ var angle
 var explodes
 var last_pos
 
+var projectile_owner_group
+
+
 func _ready():
 	print(self.z_index)
 	print("Projectile Position (Global): ", position)
@@ -64,7 +67,15 @@ func detonate():
 
 
 func _on_projectile_area_2d_body_entered(body: Node2D) -> void:
-	if body.is_in_group("enemies"):
+	## easy way to prevent certain groups from hitting eachother is needed
+	if body.is_in_group("enemies") and "player" in projectile_owner_group:
+		last_pos = position
+		body.take_damage(damage)
+		if explodes:
+			detonate()
+		
+		queue_free()
+	elif body.is_in_group("player") and "enemies" in projectile_owner_group:
 		last_pos = position
 		body.take_damage(damage)
 		if explodes:
