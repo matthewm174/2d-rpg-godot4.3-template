@@ -69,16 +69,17 @@ enum ENEMY_STATE {
 	FLEE,
 	SEARCH,
 	IDLE,
-	APPROACH ## use for short ranges
+	APPROACH, ## use for short ranges
+	MEANDER
 }
-var state_timer = Timer.new()
+var chase_state_timer = Timer.new()
 var chase_state_interval: float = 7.0
 var state_interval: float = 10.0
 var search_state_interval: float = 10.0
-
+var seeking = true
 var search_timer = Timer.new()
 var avoidance_direction
-
+var meander_idle_timer = Timer.new()
 @export var path_update_interval: float = 0.3 
 var path_update_timer = Timer.new()
 
@@ -147,10 +148,14 @@ func _ready() -> void:
 	patrol_change_timer.autostart = false
 	add_child(patrol_change_timer)
 	
-	state_timer.wait_time = state_interval
-	state_timer.autostart = false
-	state_timer.timeout.connect(_update_state)
-	add_child(state_timer)
+	chase_state_timer.wait_time = state_interval
+	chase_state_timer.autostart = false
+	chase_state_timer.timeout.connect(_update_chase_state)
+	add_child(chase_state_timer)
+	
+	meander_idle_timer.timeout.connect(_meander_idle_timer)
+	meander_idle_timer.autostart = false
+	add_child(meander_idle_timer)
 	
 	search_timer.wait_time = 3
 	search_timer.autostart = false
@@ -170,28 +175,52 @@ func _ready() -> void:
 		enemy_state = ENEMY_STATE.IDLE
 
 func _on_direction_updated(new_direction: Vector2):
-	print("New direction received:", new_direction)
 	avoidance_direction = new_direction
 
 func _meander_idle_timer():
 	if is_dead:
 		return
-	current_target = (current_target + 1) % search_points.size()
-	target_position = search_points[current_target]
-	agent.target_position = target_position
-	search_timer.start()
-	
+	match enemy_state:
+		ENEMY_STATE.IDLE:
+			var new_time = get_movement_noise()
+			meander_idle_timer.wait_time = new_time
+			meander_idle_timer.start()
+			enemy_state = ENEMY_STATE.MEANDER
+		ENEMY_STATE.MEANDER:
+			var new_time = get_movement_noise()
+			meander_idle_timer.wait_time = new_time
+			
+			search_points = Vector2Utils.generate_patrol_points(global_position, 8, 200)
+			current_target = (current_target + 1) % search_points.size()
+			target_position = search_points[current_target]
+			agent.target_position = target_position
+			speed = speed/2
+			meander_idle_timer.start()
+			enemy_state = ENEMY_STATE.IDLE
 
 
-func _update_state():
-	print("state %s", enemy_state)
+func get_movement_noise():
+	return get_noise(13.0, 3.0, 0.1, 0.1)
+
+func get_noise(max, min, scale, offset):
+	var noise = FastNoiseLite.new()
+	noise.seed = randi()
+	noise.noise_type = FastNoiseLite.TYPE_PERLIN
+	if noise:
+		var noise_value = noise.get_noise_2d(offset * scale, 0)
+		noise_value = (noise_value + 1) / 2.0
+		noise = null
+		return lerp(min, max, noise_value)
+
+func _update_chase_state():
+	print("state", enemy_state)
 	match enemy_state:
 		ENEMY_STATE.CHASE:
 			enemy_state = ENEMY_STATE.SEARCH
 			search_points = Vector2Utils.generate_patrol_points(global_position, 8, 200)
-			state_timer.wait_time = search_state_interval
+			chase_state_timer.wait_time = search_state_interval
 			search_timer.start()
-			state_timer.start()
+			chase_state_timer.start()
 		ENEMY_STATE.SEARCH:
 			search_timer.stop()
 			enemy_state = ENEMY_STATE.PATROL
@@ -228,14 +257,25 @@ func play_death():
 func _on_body_entered(body: Node):
 	print(body.get_groups())
 	if body is CharacterBody2D and body.is_in_group("player"):
-		player_in_range = true
+		if enemy_state != ENEMY_STATE.CHASE and seeking:
+			enemy_state = ENEMY_STATE.CHASE
+			chase_state_timer.wait_time = chase_state_interval
+			chase_state_timer.start()
+			path_update_timer.start()
+		else:
+			if enemy_state != ENEMY_STATE.APPROACH:
+				enemy_state = ENEMY_STATE.APPROACH
 		player_ref = body
 
+## meander if player leaves body
 func _on_body_exited(body: Node):
 	print()
 	if body is CharacterBody2D and body.is_in_group("player"):
-		player_in_range = false
 		player_ref = null
+		if enemy_state != ENEMY_STATE.IDLE or enemy_state != ENEMY_STATE.MEANDER:
+			enemy_state = ENEMY_STATE.IDLE
+			meander_idle_timer.start()
+			path_update_timer.start()
 
 
 
@@ -304,6 +344,7 @@ func create_projectile_for_current_spell():
 	var direction = (mouse_position - position).normalized()
 	if current_spell.spell_type == Spell.CAST_TYPES.PROJECTILE:
 		var projectile = ProjectileSpell.instantiate()
+		projectile.projectile_owner_group = self.get_groups()
 		projectile.direction = direction
 		projectile.speed = current_spell.spell_speed
 		projectile.explosion_duration = current_spell.explosion_dur
@@ -416,36 +457,36 @@ func _physics_process(delta):
 			is_knockback_active = false
 		return
 
-	var should_move = true
 	
-	if player_in_range:
-		if enemy_state != ENEMY_STATE.CHASE:
-			enemy_state = ENEMY_STATE.CHASE
-			state_timer.wait_time = chase_state_interval
-			state_timer.start()
-			path_update_timer.start()
+	
+
 			
-		var distance = global_position.distance_to(Globals.current_player.character_body_2d.global_position)
 		
-		if distance <= attack_range:
-			try_attack()
-			should_move = false
-		elif caster and distance <= cast_range:
-			try_cast()
-			should_move = false
 		
-	if should_move:
+	if handle_combat_decisions(): ## if enemy isnt in combat, should_move is true
 		var move_target = agent.get_next_path_position()
 		if global_position.distance_to(move_target) > 1.0:
 			var blend_weight = 0.5
 			var move_target_dir = (move_target - global_position).normalized()
-			movement_direction = (move_target_dir * (1.0 - blend_weight) + avoidance_direction * blend_weight).normalized()
-			velocity = movement_direction  * speed
+			
+			movement_direction = (move_target_dir * (1.0 - blend_weight) + steering.calculate_direction(delta) * blend_weight).normalized()
+			velocity = movement_direction * speed
 			move_and_slide()
 			if velocity.length() > speed * 0.1:
 				set_animation_from_direction(movement_direction)
-	steering.calculate_direction(delta)
+	
 
+func handle_combat_decisions():
+	var should_move = true
+	var distance = global_position.distance_to(Globals.current_player.character_body_2d.global_position)
+		
+	if distance <= attack_range:
+		try_attack()
+		should_move = false
+	elif caster and distance <= cast_range:
+		try_cast()
+		should_move = false
+	return should_move
 
 func _update_navigation_path():
 	

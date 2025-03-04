@@ -1,9 +1,9 @@
 [gd_scene load_steps=27 format=4 uid="uid://bm74j0d5h6wg8"]
 
 [ext_resource type="Texture2D" uid="uid://cbbsgpwyh5u8k" path="res://tilemaps/Atlas/base_out_atlas.png" id="1_1ca6s"]
-[ext_resource type="Script" path="res://ui/Mask/xray_mask.gd" id="1_1itai"]
+[ext_resource type="Script" uid="uid://cdd78v25vp8mw" path="res://ui/Mask/xray_mask.gd" id="1_1itai"]
 [ext_resource type="Texture2D" uid="uid://caar8s13ahbmi" path="res://tilemaps/Atlas/terrain_atlas.png" id="2_ltuh3"]
-[ext_resource type="Shader" path="res://shaders/secLvl.gdshader" id="3_yy1f3"]
+[ext_resource type="Shader" uid="uid://b1qwhd2gwsige" path="res://shaders/secLvl.gdshader" id="3_yy1f3"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_y3ql4"]
 shader = ExtResource("3_yy1f3")

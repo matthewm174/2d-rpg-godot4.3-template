@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dhmd2d2keny5"]
 
-[ext_resource type="Script" path="res://scripts/mobs/enemy.gd" id="1_kyo74"]
+[ext_resource type="Script" uid="uid://jrg80gu66340" path="res://scripts/mobs/enemy.gd" id="1_kyo74"]
 
 [node name="Enemy" type="Node2D"]
 
