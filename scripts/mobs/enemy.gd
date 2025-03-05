@@ -73,7 +73,7 @@ enum ENEMY_STATE {
 	MEANDER
 }
 var chase_state_timer = Timer.new()
-var chase_state_interval: float = 7.0
+var chase_state_interval: float = 15.0
 var state_interval: float = 10.0
 var search_state_interval: float = 10.0
 var seeking = true
@@ -82,7 +82,7 @@ var avoidance_direction
 var meander_idle_timer = Timer.new()
 @export var path_update_interval: float = 0.3 
 var path_update_timer = Timer.new()
-
+var continue_chase
 
 
 func is_animating() -> bool:
@@ -157,7 +157,7 @@ func _ready() -> void:
 	meander_idle_timer.autostart = false
 	add_child(meander_idle_timer)
 	
-	search_timer.wait_time = 3
+	search_timer.wait_time = 10
 	search_timer.autostart = false
 	search_timer.timeout.connect(_on_search_change_timer_timeout)
 	add_child(search_timer)
@@ -166,6 +166,7 @@ func _ready() -> void:
 	path_update_timer.autostart = false
 	path_update_timer.timeout.connect(_update_navigation_path)
 	add_child(path_update_timer)
+	path_update_timer.start()
 	
 	steering.direction_updated.connect(_on_direction_updated)
 	
@@ -178,6 +179,7 @@ func _on_direction_updated(new_direction: Vector2):
 	avoidance_direction = new_direction
 
 func _meander_idle_timer():
+	print("meander_idle")
 	if is_dead:
 		return
 	match enemy_state:
@@ -189,12 +191,10 @@ func _meander_idle_timer():
 		ENEMY_STATE.MEANDER:
 			var new_time = get_movement_noise()
 			meander_idle_timer.wait_time = new_time
-			
 			search_points = Vector2Utils.generate_patrol_points(global_position, 8, 200)
 			current_target = (current_target + 1) % search_points.size()
 			target_position = search_points[current_target]
 			agent.target_position = target_position
-			speed = speed/2
 			meander_idle_timer.start()
 			enemy_state = ENEMY_STATE.IDLE
 
@@ -213,19 +213,21 @@ func get_noise(max, min, scale, offset):
 		return lerp(min, max, noise_value)
 
 func _update_chase_state():
-	print("state", enemy_state)
-	match enemy_state:
-		ENEMY_STATE.CHASE:
-			enemy_state = ENEMY_STATE.SEARCH
-			search_points = Vector2Utils.generate_patrol_points(global_position, 8, 200)
-			chase_state_timer.wait_time = search_state_interval
-			search_timer.start()
-			chase_state_timer.start()
-		ENEMY_STATE.SEARCH:
-			search_timer.stop()
-			enemy_state = ENEMY_STATE.PATROL
-			if patrol_change_timer.is_stopped():
-				patrol_change_timer.start()
+	print("chase_state")
+	path_update_timer.wait_time = 2
+	print("chase")
+	enemy_state = ENEMY_STATE.SEARCH
+	search_points = Vector2Utils.generate_patrol_points(global_position, 8, 200)
+	search_timer.start()
+	chase_state_timer.stop()
+
+func handle_search():
+	print("search_state")
+	search_timer.stop()
+	enemy_state = ENEMY_STATE.PATROL
+	if patrol_change_timer.is_stopped():
+		patrol_change_timer.start()
+
 
 
 static func duplicate_instance(reference: Enemy, pat_points: Array[Vector2]):
@@ -255,27 +257,31 @@ func play_death():
 		enemy_animated_sprite_2d.play("death")
 
 func _on_body_entered(body: Node):
+	
+	print("body_entered")
 	print(body.get_groups())
 	if body is CharacterBody2D and body.is_in_group("player"):
-		if enemy_state != ENEMY_STATE.CHASE and seeking:
+		player_ref = body
+		if seeking:
 			enemy_state = ENEMY_STATE.CHASE
 			chase_state_timer.wait_time = chase_state_interval
+			meander_idle_timer.stop()
 			chase_state_timer.start()
-			path_update_timer.start()
 		else:
 			if enemy_state != ENEMY_STATE.APPROACH:
 				enemy_state = ENEMY_STATE.APPROACH
-		player_ref = body
 
-## meander if player leaves body
+
+## meander if player leaves body and chase timer is over
 func _on_body_exited(body: Node):
 	print()
-	if body is CharacterBody2D and body.is_in_group("player"):
+	if body is CharacterBody2D and body.is_in_group("player") and chase_state_timer.is_stopped() and search_timer.is_stopped():
 		player_ref = null
 		if enemy_state != ENEMY_STATE.IDLE or enemy_state != ENEMY_STATE.MEANDER:
 			enemy_state = ENEMY_STATE.IDLE
 			meander_idle_timer.start()
-			path_update_timer.start()
+			chase_state_timer.stop()
+			path_update_timer.stop()
 
 
 
@@ -428,14 +434,13 @@ func apply_knockback(knockback_force: Vector2):
 	is_knockback_active = true
 
 func _on_search_change_timer_timeout():
+	print("search")
 	if is_dead || search_points.is_empty():
 		return
-	current_target = (current_target + 1) % search_points.size()
-	target_position = search_points[current_target]
-	agent.target_position = target_position
-	search_timer.start()
+	handle_search()
 
 func _on_patrol_change_timer_timeout():
+	print("patrol")
 	# this should return enemy to original patrol point if no longer sees player
 	if is_dead || patrol_points.is_empty():
 		return
@@ -448,7 +453,7 @@ func _on_patrol_change_timer_timeout():
 func _physics_process(delta):
 	if is_dead || patrol_points.is_empty() || NavigationServer2D.map_get_iteration_id(agent.get_navigation_map()) == 0:
 		return
-
+	steering.calculate_direction(delta)
 	if is_knockback_active:
 		velocity = knockback_velocity
 		knockback_velocity = knockback_velocity.lerp(Vector2.ZERO, 100.0 * delta)
@@ -456,12 +461,8 @@ func _physics_process(delta):
 		if knockback_velocity.length() < 1.0:
 			is_knockback_active = false
 		return
-
 	
 	
-
-			
-		
 		
 	if handle_combat_decisions(): ## if enemy isnt in combat, should_move is true
 		var move_target = agent.get_next_path_position()
@@ -469,7 +470,7 @@ func _physics_process(delta):
 			var blend_weight = 0.5
 			var move_target_dir = (move_target - global_position).normalized()
 			
-			movement_direction = (move_target_dir * (1.0 - blend_weight) + steering.calculate_direction(delta) * blend_weight).normalized()
+			movement_direction = (move_target_dir * (1.0 - blend_weight) + avoidance_direction * blend_weight).normalized()
 			velocity = movement_direction * speed
 			move_and_slide()
 			if velocity.length() > speed * 0.1:
@@ -489,11 +490,19 @@ func handle_combat_decisions():
 	return should_move
 
 func _update_navigation_path():
-	
-	if enemy_state != ENEMY_STATE.CHASE:
-		return
-	var target_pos = Globals.current_player.character_body_2d.global_position
-	
-	if target_pos.distance_to(last_player_position) > 30.0 and player_in_range:
-		agent.target_position = target_pos
-		last_player_position = target_pos
+	print("UPDATE NAV PATH")
+	if enemy_state == ENEMY_STATE.PATROL:
+		current_target = (current_target + 1) % patrol_points.size()
+		target_position = patrol_points[current_target]
+		agent.target_position = target_position
+	if enemy_state == ENEMY_STATE.SEARCH:
+		current_target = (current_target + 1) % search_points.size()
+		target_position = search_points[current_target]
+		agent.target_position = target_position
+	if enemy_state == ENEMY_STATE.CHASE:
+		var target_pos = Globals.current_player.character_body_2d.global_position
+		if target_pos.distance_to(last_player_position) > 30.0 and enemy_state == ENEMY_STATE.CHASE:
+			agent.target_position = target_pos
+			last_player_position = target_pos
+			path_update_timer.start()
+		

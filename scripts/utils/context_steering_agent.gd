@@ -43,7 +43,7 @@ func _update_interest():
 	for i in range(num_rays):
 		var global_dir = agent.global_transform.basis_xform(ray_directions[i]).normalized()
 		var weight = global_dir.dot(target_dir)
-		interest[i] = maxf(weight, 0.0)
+		interest[i] = max(weight, 0.0)
 
 func _draw():
 	var line_length = 50.0
