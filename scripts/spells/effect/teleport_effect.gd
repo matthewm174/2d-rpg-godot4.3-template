@@ -3,9 +3,9 @@ class_name TeleportEffect
 
 static func teleport(target: PlayerCharacterBody2d, target_end_pos: Vector2):
 	
-	print(target.position)
-	print(target.global_position)
-	print(target_end_pos)
+	#print(target.position)
+	#print(target.global_position)
+	#print(target_end_pos)
 	var tween = target.create_tween()
 	#make this configgable
 	var particles = GPUParticles2D.new()

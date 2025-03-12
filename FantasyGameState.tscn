@@ -1,7 +1,7 @@
 [gd_scene load_steps=30 format=4 uid="uid://r4d2q3dgspjh"]
 
 [ext_resource type="Script" uid="uid://bgbmhdr1pee3l" path="res://fantasy_game_state.gd" id="1_1t1yh"]
-[ext_resource type="PackedScene" uid="uid://d2j78l8viivgs" path="res://Player.tscn" id="2_cu2lx"]
+[ext_resource type="PackedScene" uid="uid://d2j78l8viivgs" path="res://scripts/player/Player.tscn" id="2_cu2lx"]
 [ext_resource type="Texture2D" uid="uid://cbbsgpwyh5u8k" path="res://tilemaps/Atlas/base_out_atlas.png" id="4_7ooxa"]
 [ext_resource type="Script" uid="uid://bp6h0ishsb02w" path="res://avoidance_setup.gd" id="4_miawi"]
 [ext_resource type="Texture2D" uid="uid://caar8s13ahbmi" path="res://tilemaps/Atlas/terrain_atlas.png" id="6_x2nty"]

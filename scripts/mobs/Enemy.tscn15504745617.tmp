@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://dhmd2d2keny5"]
+[gd_scene load_steps=13 format=3 uid="uid://dhmd2d2keny5"]
 
 [ext_resource type="Script" uid="uid://jrg80gu66340" path="res://scripts/mobs/enemy.gd" id="1_kyo74"]
 [ext_resource type="Script" uid="uid://du7jhejgc35sv" path="res://scripts/utils/state_machine/states/BaseEnemyState.gd" id="2_dwcce"]
@@ -12,7 +12,6 @@
 [ext_resource type="Script" uid="uid://cs2ew6li3h5py" path="res://scripts/utils/state_machine/states/enemies/flee.gd" id="9_h8rsc"]
 [ext_resource type="Script" uid="uid://da20lvn3m48fu" path="res://scripts/utils/state_machine/states/enemies/idle.gd" id="10_245bg"]
 [ext_resource type="Script" uid="uid://cuymoht8jadno" path="res://scripts/utils/state_machine/states/enemies/meander.gd" id="11_ffdje"]
-[ext_resource type="Script" uid="uid://bv73bbppsi8yb" path="res://scripts/utils/state_machine/states/enemies/approach.gd" id="13_h8rsc"]
 
 [node name="Enemy" type="Node2D"]
 
@@ -23,7 +22,15 @@ collision_mask = 3
 motion_mode = 1
 safe_margin = 1.0
 script = ExtResource("1_kyo74")
+health = null
+speed = null
 patrol_points = Array[Vector2]([Vector2(99, 100), Vector2(0, 0)])
+vision_radius = null
+attack_range = null
+cast_range = null
+attack_cooldown = null
+spell_cooldown = null
+path_update_interval = null
 
 [node name="StateMachine" type="Node" parent="CharacterBody2D"]
 script = ExtResource("2_xpo6i")
@@ -84,7 +91,3 @@ metadata/_custom_type_script = "uid://du7jhejgc35sv"
 [node name="AttackAlt" type="Node" parent="CharacterBody2D/StateMachine"]
 script = ExtResource("2_dwcce")
 metadata/_custom_type_script = "uid://du7jhejgc35sv"
-
-[node name="Approach" type="Node" parent="CharacterBody2D/StateMachine"]
-script = ExtResource("13_h8rsc")
-metadata/_custom_type_script = "uid://bv73bbppsi8yb"

@@ -25,10 +25,7 @@ var skills: Dictionary
 
 var player_weapon_holding_type = Weapon.ITEM_TYPE.SWORD
 
-# Movement and Animation
-var facing_direction = Direction.DOWN
 var facing = "down"
-var move_dir = facing_direction
 var is_animating_spell = false
 var is_animating_attack = false
 var knockback_velocity: Vector2 = Vector2.ZERO
@@ -143,7 +140,7 @@ func create_projectile_for_current_spell():
 		# Spawn the projectile at the player's position
 		var projectile = ProjectileSpell.instantiate()
 		projectile.direction = direction
-		print(direction)
+		#print(direction)
 		projectile.projectile_owner_group = self.get_groups()
 		projectile.speed = current_spell.spell_speed
 		projectile.explosion_duration = current_spell.explosion_dur
@@ -252,9 +249,30 @@ func add_item_to_equipment_panel(item_meta: Wearable_Item):
 		Wearable_Item.WEARABLE_LOCATION.Spells:
 			append_to_spells(item_meta)
 
+func handle_menu():
+	if Input.is_action_just_pressed("inventory"):
+		if not showing_inventory:
+			Globals.in_game_ui.show_inventory()
+			showing_inventory = true
+		else:
+			Globals.in_game_ui.hide_inventory()
+			showing_inventory = false
+
+	if Input.is_action_just_pressed("menu"):
+		if not showing_menu:
+			Globals.in_game_ui.show_main_menu()
+			showing_menu = true
+		else:
+			Globals.in_game_ui.hide_main_menu()
+			showing_menu = false
+
 func get_input():
+	
+	handle_menu()
 	var input_direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	var base_speed = stats["Speed"] * 20
+	
+	
 	if Input.is_action_pressed("sprint"):
 		player_animated_sprite_2d.speed_scale = 1
 		base_speed *= 1.5
@@ -266,19 +284,10 @@ func get_input():
 		player_animated_sprite_2d.speed_scale = 1
 		base_speed *= 6.0
 	velocity = input_direction * base_speed
+	
 
 func handle_spell():
-	match move_dir:
-		Direction.UP:
-			player_animated_sprite_2d.play("man_cast_up")
-		Direction.DOWN:
-			player_animated_sprite_2d.play("man_cast_down")
-		Direction.LEFT:
-			player_animated_sprite_2d.play("man_cast_left")
-		Direction.RIGHT:
-			player_animated_sprite_2d.play("man_cast_right")
-
-
+	player_animated_sprite_2d.play("man_cast_"+facing)
 func _on_wep_animation_finished():
 	weapon_sprite.visible = false
 	
@@ -304,21 +313,7 @@ func is_animating():
 	return is_animating_spell || is_animating_attack
 
 func set_animation():
-	if Input.is_action_just_pressed("inventory"):
-		if not showing_inventory:
-			Globals.in_game_ui.show_inventory()
-			showing_inventory = true
-		else:
-			Globals.in_game_ui.hide_inventory()
-			showing_inventory = false
 
-	if Input.is_action_just_pressed("menu"):
-		if not showing_menu:
-			Globals.in_game_ui.show_main_menu()
-			showing_menu = true
-		else:
-			Globals.in_game_ui.hide_main_menu()
-			showing_menu = false
 		
 	if Input.is_action_pressed("spell_attack"):
 		is_animating_spell = true;
@@ -342,26 +337,18 @@ func set_animation():
 	var angle = rad_to_deg(direction.angle())
 	if not is_animating():
 		if Input.is_action_pressed("move_left") or Input.is_action_pressed("move_right") or Input.is_action_pressed("move_up") or Input.is_action_pressed("move_down"):
-			match move_dir:
-				Direction.RIGHT:
-					player_animated_sprite_2d.play("man_walk_right")
-				Direction.UP:
-					player_animated_sprite_2d.play("man_walk_up")
-				Direction.LEFT:
-					player_animated_sprite_2d.play("man_walk_left")
-				Direction.DOWN:
-					player_animated_sprite_2d.play("man_walk_down")
+			#match facing:
+				#"right":
+				player_animated_sprite_2d.play("man_walk_"+facing)
+				#Direction.UP:
+					#player_animated_sprite_2d.play("man_walk_up")
+				#Direction.LEFT:
+					#player_animated_sprite_2d.play("man_walk_left")
+				#Direction.DOWN:
+					#player_animated_sprite_2d.play("man_walk_down")
 		else:
 			# play idle animation based on move_dir
-			match move_dir:
-				Direction.RIGHT:
-					player_animated_sprite_2d.play("man_idle_right")
-				Direction.UP:
-					player_animated_sprite_2d.play("man_idle_up")
-				Direction.LEFT:
-					player_animated_sprite_2d.play("man_idle_left")
-				Direction.DOWN:
-					player_animated_sprite_2d.play("man_idle_down")
+			player_animated_sprite_2d.play("man_idle_"+facing)
 				
 
 func apply_knockback(direction: Vector2):
@@ -501,10 +488,8 @@ func handle_new_quest_notification(quest_requirements: String):
 
 func _physics_process(delta):
 	var velocity = Vector2.ZERO
-	
 	if is_knockback_active:
 		velocity = knockback_velocity
-	
 	if not is_animating():
 		get_input()
 		move_and_slide()
@@ -524,19 +509,15 @@ func _process(delta):
 	
 	check_interaction_collision()
 	if aim_angle >= -45 and aim_angle < 45:
-		move_dir = Direction.RIGHT  # Right
 		facing = "right"
 		interaction_ray_cast_2d.rotation_degrees = 90
 	elif aim_angle >= 45 and aim_angle < 135:
-		move_dir = Direction.DOWN # Up
 		facing = "down"
 		interaction_ray_cast_2d.rotation_degrees = 180
 	elif aim_angle >= 135 or aim_angle < -135:
-		move_dir = Direction.LEFT  # Left
 		facing = "left"
 		interaction_ray_cast_2d.rotation_degrees = 270
 	else:
-		move_dir = Direction.UP # Down
 		facing = "up"
 		interaction_ray_cast_2d.rotation_degrees = 0
 	set_animation()
