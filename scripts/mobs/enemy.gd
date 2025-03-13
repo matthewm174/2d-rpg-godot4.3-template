@@ -229,23 +229,6 @@ func get_noise(max, min, scale, offset):
 		noise = null
 		return lerp(min, max, noise_value)
 
-#func _update_chase_state():
-	#print("chase_state")
-	#path_update_timer.wait_time = 2
-	#print("chase")
-	#enemy_state = ENEMY_STATE.SEARCH
-	#search_points = Vector2Utils.generate_patrol_points(global_position, 8, 200)
-	#search_timer.start()
-	#chase_state_timer.stop()
-
-#func handle_search():
-	#print("search_state")
-	#search_timer.stop()
-	#enemy_state = ENEMY_STATE.PATROL
-	#if patrol_change_timer.is_stopped():
-		#patrol_change_timer.start()
-
-
 
 static func duplicate_instance(reference: Enemy, pat_points: Array[Vector2]):
 	var new_enemy = Enemy.new(
@@ -478,7 +461,7 @@ func _physics_process(delta):
 		if knockback_velocity.length() < 1.0:
 			is_knockback_active = false
 		return
-	if enemy_state_machine.state is not EnemyAttackState || enemy_state_machine.state is not EnemyCastState: ## if enemy isnt in combat, should_move is true
+	if enemy_state_machine.state.name != "EnemyAttackState" || enemy_state_machine.state.name != "EnemyCastState":
 		var move_target = agent.get_next_path_position()
 		if global_position.distance_to(move_target) > 1.0:
 			var blend_weight = 0.5
@@ -491,20 +474,22 @@ func _physics_process(delta):
 				set_animation_from_direction(movement_direction)
 	
 
-#func handle_combat_decisions():
-	#var should_move = true
-	#var distance = global_position.distance_to(Globals.current_player.character_body_2d.global_position)
-	#if distance <= attack_range:
-		#try_attack()
-		#should_move = false
-	#elif caster and distance <= cast_range:
-		#try_cast()
-		#should_move = false
-	#return should_move
+# func handle_combat_decisions():
+# 	var should_move = true
+# 	var distance = char_body.global_position.distance_to(Globals.current_player.character_body_2d.global_position)
+# 	if distance <= char_body.attack_range:
+# 		finished.emit("EnemyAttackState")
+# 		should_move = false
+# 	elif char_body.caster and distance <= char_body.cast_range:
+# 		finished.emit("EnemtCastState")
+# 		should_move = false
+# 	return should_move
 
 ## Decide movement pattern based on state
 func _update_navigation_path():
-	print("update nav")
+	print("state curr: ", enemy_state_machine.state.name)
+
+	#print("update nav")
 	if enemy_state_machine.state.name == "EnemyPatrolState":
 		if is_dead || patrol_points.is_empty():
 			return
@@ -512,7 +497,6 @@ func _update_navigation_path():
 		target_position = patrol_points[current_target]
 		agent.target_position = target_position
 
-	print(enemy_state_machine.state.name)
 	if enemy_state_machine.state.name == "EnemySearchState":
 		current_target = (current_target + 1) % search_points.size()
 		target_position = search_points[current_target]
@@ -520,8 +504,9 @@ func _update_navigation_path():
 	if enemy_state_machine.state.name == "EnemyChaseState":
 		var target_pos = Globals.current_player.character_body_2d.global_position
 		if target_pos.distance_to(last_player_position) > 30.0:
-			agent.target_position = target_pos
 			last_player_position = target_pos
+			target_position=target_pos
+			agent.target_position = target_pos
 			
 	set_new_target(target_position)
 	path_update_timer.start()

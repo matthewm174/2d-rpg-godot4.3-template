@@ -13,8 +13,8 @@ func _meander_timer_timeout():
 	if char_body.is_dead:
 		finished.emit("EnemyDeathState")
 		return
-
-		finished.emit("EnemyIdleState")
+	finished.emit("EnemyIdleState")
+	meander_timer.stop()
 
 	pass
 
@@ -25,7 +25,8 @@ func enter(previous_state_path: String, data := {}) -> void:
 	char_body.current_target = (char_body.current_target + 1) % meander_points.size()
 	char_body.target_position = meander_points[char_body.current_target]
 	char_body.agent.target_position = char_body.target_position
-	pass
+	meander_timer.start()
+
 
 
 func update(delta):

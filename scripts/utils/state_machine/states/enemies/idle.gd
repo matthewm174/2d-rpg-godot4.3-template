@@ -20,6 +20,9 @@ func enter(previous_state_path: String, data := {}) -> void:
 	
 func update(delta):
 	check_detect_player()
+	
+func exit():
+	idle_timer.stop()
 
 
 func physics_update(_delta: float) -> void:

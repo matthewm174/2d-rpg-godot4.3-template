@@ -2,7 +2,7 @@ extends EnemyState
 class_name EnemySearchState
 
 var search_timer = Timer.new()
-#var search_points
+
 var times_iterated
 
 func _ready() -> void:
@@ -17,7 +17,7 @@ func _on_search_change_timer_timeout():
 	times_iterated+=1
 	if char_body.is_dead || char_body.search_points.is_empty():
 		return
-	if times_iterated < char_body.search_points.size():
+	if times_iterated >= char_body.search_points.size():
 		search_timer.stop()
 		finished.emit("EnemyMeanderState")
 	else:
